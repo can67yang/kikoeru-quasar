@@ -75,3 +75,9 @@ export default {
   methods: {},
 };
 </script>
+
+<style scoped>
+.tab {
+  padding-left: 2rem;
+}
+</style>

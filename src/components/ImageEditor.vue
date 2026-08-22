@@ -197,3 +197,13 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.img {
+  object-fit: fill;
+}
+
+.cover-type-toggle {
+  border: 1px solid #027be3;
+}
+</style>

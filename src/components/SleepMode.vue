@@ -69,7 +69,7 @@ export default {
           const currentTime = new Date();
           this.time = currentTime.getHours().toString().padStart(2, '0') + ':' + currentTime.getMinutes().toString().padStart(2, '0');          
         } else {
-          this.time = this.sleepTime;
+          this.time = this.$q.date.formatDate(this.sleepTime, 'HH:mm');
         }
       }
     }
@@ -82,15 +82,23 @@ export default {
     ]),
 
     setSleepTimer() {
-      this.SET_SLEEP_TIMER(this.time);
+      const stopTime = new Date();
+      // 若设定时刻早于当前时刻,则视为次日
+      if (stopTime.getHours() > this.hour || (stopTime.getHours() === this.hour && stopTime.getMinutes() >= this.minute)) {
+        stopTime.setDate(stopTime.getDate() + 1);
+      }
+      stopTime.setHours(this.hour);
+      stopTime.setMinutes(this.minute);
+      const stopMills = stopTime.getTime();
+      this.SET_SLEEP_TIMER(stopMills);
       // Persist sleep timer
       try {
-        this.$q.sessionStorage.set('sleepTime', this.time);
+        this.$q.sessionStorage.set('sleepTime', stopMills);
         this.$q.sessionStorage.set('sleepMode', true);
       } catch {
         console.log('Web Storage API error');
       }
-      this.showSuccNotif(`将于${this.time}停止播放`);
+      this.showSuccNotif(`将于${this.$q.date.formatDate(stopTime, 'HH:mm:ss')}停止播放`);
     },
 
     clearSleepTimer() {

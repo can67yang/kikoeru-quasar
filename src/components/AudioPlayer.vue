@@ -307,6 +307,7 @@
         <div class="row items-center q-mx-lg" style="height: 50px" v-if="!$q.platform.is.ios">
           <q-icon name="volume_down" size="sm" class="col-auto" />
           <q-slider v-model="volume" :min="0" :max="1" :step="0.01" class="col q-mx-md" :disable="proxyGain > 1"/>
+          <q-icon name="volume_up" size="sm" class="col-auto" />
           <!-- 音量大于1时的增益滑块（仅在开启音频可视化时可用） -->
           <q-slider
             v-if="enableVisualizer && volume >= 1"
@@ -318,7 +319,6 @@
             :step="0.01"
             label
           />
-          <q-icon name="volume_up" size="sm" class="col-auto" />
         </div>
       </q-card>
     </div>

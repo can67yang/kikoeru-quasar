@@ -167,8 +167,8 @@ export default {
     min-width: 1vw;
     max-width: 90vw;
   }
-  #lyric {
-    text-shadow:1px 1px 2px black;
+  .lyric {
+    text-shadow:1px 1px 2px #000;
   }
   .lyricBackground {
     border-radius: 10px;
