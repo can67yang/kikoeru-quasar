@@ -149,7 +149,33 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.super-small {
-  max-width: 80px;
+.jump-unit {
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 4px;
+}
+
+.super-small ::v-deep .q-field__inner {
+  height: 1.5rem !important;
+  width: 4rem;
+  padding-top: 0px !important;
+}
+
+.super-small ::v-deep .q-field__control {
+  height: 1.5rem !important;
+  min-height: 1.5rem !important;
+}
+
+.super-small ::v-deep .q-field__marginal {
+  height: 1.5rem !important;
+}
+
+.super-small ::v-deep .q-field__label {
+  top: 0px !important;
+}
+
+.super-small ::v-deep input,
+.super-small ::v-deep input::placeholder {
+  font-size: 0.75rem;
 }
 </style>
