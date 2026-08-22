@@ -60,6 +60,7 @@
 
         <q-card-section>
           <q-input
+            class="q-mb-md"
             outlined dense
             v-model="form.name"
             label="别名 *"
@@ -67,6 +68,7 @@
           />
 
           <q-select
+            class="q-mb-md"
             outlined dense
             v-model="form.type"
             :options="typeOptions"
@@ -77,20 +79,17 @@
           />
 
           <template v-if="form.type === 'local'">
-            <q-input outlined dense v-model="form.path" label="绝对路径 *" :rules="[val => !!val || '请输入路径']" />
+            <q-input class="q-mb-md" outlined dense v-model="form.path" label="绝对路径 *" :rules="[val => !!val || '请输入路径']" />
           </template>
 
           <template v-else>
-            <q-input outlined dense v-model="form.path" label="路径(音声作品所在子目录) *"
-              hint="作品文件夹(RJ 开头)放在服务器上的目录;留空则用服务器根目录。"
-            />
-            <q-input outlined dense v-model="form.url" label="服务器地址 *"
+            <q-input class="q-mb-md" outlined dense v-model="form.path" label="路径(音声作品所在子目录) *" />
+            <q-input class="q-mb-md" outlined dense v-model="form.url" label="服务器地址 *"
               :rules="[val => !!val || '请输入 WebDAV 服务器地址', val => /^https?:\/\//i.test(val) || '服务器地址需以 http:// 或 https:// 开头']"
-              hint="alist 的 WebDAV 地址必须以 /dav 结尾;Basic 认证使用 alist 登录账号密码。"
             />
-            <q-input outlined dense v-model="form.username" label="用户名" autocomplete="username" />
-            <q-input outlined dense v-model="form.password" label="密码" type="password" autocomplete="new-password" />
-            <q-toggle v-model="form.insecure" label="跳过 TLS 证书校验(家庭自建 HTTPS 证书)" />
+            <q-input class="q-mb-md" outlined dense v-model="form.username" label="用户名" autocomplete="username" />
+            <q-input class="q-mb-md" outlined dense v-model="form.password" label="密码" type="password" autocomplete="new-password" />
+            <q-toggle class="q-mt-xs" v-model="form.insecure" label="跳过 TLS 证书校验(家庭自建 HTTPS 证书)" />
           </template>
         </q-card-section>
 
@@ -123,7 +122,6 @@
             v-model.number="config.webdavCacheSizeMB"
             label="WebDAV 物化缓存上限(MB)"
             :rules="[val => val >= 16 || '最小 16']"
-            hint="转码 / loudnorm 等需要本地文件的操作,下载到 sqlite/webdav_cache 的临时缓存上限,按最近使用淘汰。"
           />
         </div>
       </q-card>
