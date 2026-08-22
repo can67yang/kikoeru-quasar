@@ -79,6 +79,8 @@
         </span>
         <q-chip size="sm" icon="sell">{{ metadata.dl_count }}</q-chip>
         <q-chip v-if="!metadata.nsfw" class="q-mx-sm" dense style="background: #e6f7d6; color: #56842a">全年龄</q-chip>
+        <q-chip v-if="metadata.relatedWorks.length > 1" size="sm" icon="translate">多语种</q-chip>
+        <q-chip v-if="totalDuration" size="sm" icon="schedule">{{ shortHumanReadableSeconds(totalDuration) }}</q-chip>
       </div>
 
       <!-- 声优 -->
@@ -101,6 +103,7 @@
 </template>
 
 <script>
+import { shortHumanReadableSeconds } from 'src/utils'
 import CoverSFW from 'components/CoverSFW'
 import NotifyMixin from '../mixins/Notification.js'
 
@@ -180,6 +183,7 @@ export default {
   },
 
   methods: {
+    shortHumanReadableSeconds,
     submitRating (payload) {
       this.$axios.put('/api/review', payload)
         .then((response) => {

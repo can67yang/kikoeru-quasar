@@ -6,7 +6,7 @@
     <div class="row">
       <q-input class="col col-sm-12 q-pa-sm" dense outlined v-model="filterWorkId" label="搜索作品id" type="number">
         <template v-slot:prepend>
-          RJ
+          番号
         </template>
       </q-input>
       <q-input class="col col-sm-12 q-pa-sm" dense outlined v-model="filterFileName" label="搜索文件名">
@@ -29,7 +29,11 @@
     </div>
 
     <!-- 刷新 -->
-    <q-btn @click="resetLoadedData" class="full-width" color="primary">刷新</q-btn>
+    <div class="row justify-between q-mx-sm">
+      <q-btn @click="resetLoadedData" class="col-8 q-pa-sm" color="primary">刷新</q-btn>
+      <q-btn @click="batchOpTasks('delete')" class="col-1 q-pa-sm" color="negative">批量删除</q-btn>
+      <q-btn @click="batchOpTasks('redo')" class="col-1 q-pa-sm" color="warning">批量重试</q-btn>
+    </div>
     <!--<q-toggle v-model="autoRefresh" :label="autoRefresh ? '自动刷新' : '关闭自动刷新'" />-->
 
     <!--任务列表-->
@@ -57,7 +61,7 @@
                 <q-item-label>{{ task.audio_path }}</q-item-label>
                 <div class="row">
                   <q-chip square text-color="primary" icon="library_music">
-                    RJ{{ formatID(task.work_id)  }}
+                    {{ idNumberToCode(task.work_id)  }}
                   </q-chip>
                   <q-chip square color="brown-13" icon="engineering">
                     {{ task.worker_name }}
@@ -83,7 +87,7 @@
 import { mapState } from 'vuex'
 import { copyToClipboard } from 'quasar';
 import { ServerApi, AILyricTaskStatus } from "../utils.js"
-import { formatID } from '../utils.js';
+import { prefixWithFormatID } from '../utils.js';
 import NotifyMixin from '../mixins/Notification.js'
 
 export default {
@@ -107,7 +111,7 @@ export default {
       // },
       tasks: [],
       AILyricTaskStatus,
-      formatID,
+      idNumberToCode: prefixWithFormatID,
 
       filterWorkId: "",
       filterFileName: "",
@@ -189,6 +193,30 @@ export default {
 
     onLoad(_, done) {
       this.loadFurtherTasks().then(() => done())
+    },
+
+    async batchOpTasks(op) {
+      const taskCount = this.tasks.length;
+      const opDef = {
+        'delete': {
+          desc: '删除',
+          opFunc: ServerApi.deleteTask,
+        },
+        'redo': {
+          desc: '重试',
+          opFunc: ServerApi.redoTask,
+        },
+      }[op];
+      this.$q.dialog({
+        title: `批量${opDef.desc}翻译任务`,
+        message: `这将会${opDef.desc}目前已显示出来的${taskCount}个翻译任务，请确认`,
+        ok: { label: `确认${opDef.desc}`, color: 'negative' },
+        cancel: { label: '取消', color: 'secondary' },
+      }).onOk(async () => {
+        console.log(`${opDef.desc}${taskCount}个翻译任务`);
+        await opDef.opFunc(0, this.tasks.map(task => task.id));
+        this.resetLoadedData();
+      });
     },
 
     readableStatus(status) {

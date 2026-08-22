@@ -17,6 +17,7 @@
         <!-- 音声封面 -->
         <div class="row items-center albumart q-mt-lg q-pa-sm relative-position flippable-cover-container non-selectable"
           v-touch-swipe.mouse="onCoverSwipe"
+          :style="{'--scale-cover': playing ? 1 : 0.8}"
         >
           <q-img
             contain
@@ -92,6 +93,37 @@
             >
               <q-tooltip anchor="top middle" self="bottom middle">
                 桌面歌词
+              </q-tooltip>
+            </q-btn>
+
+            <!--iOS 17.3 后台连播 bug 警告-->
+            <q-btn
+              v-if="isBuggyIOS"
+              dense
+              size="md"
+              padding="none sm"
+              :flat="!enablePIPLyrics"
+              :outline="enablePIPLyrics"
+              icon="warning"
+              to="/about"
+              color="warning"
+            >
+              <q-tooltip anchor="top middle" self="bottom middle">
+                iOS 17.3 后台无法连播 bug 警告
+              </q-tooltip>
+            </q-btn>
+
+            <!--歌词选择-->
+            <q-btn
+              flat
+              dense
+              size="md"
+              padding="none sm"
+              icon="subtitles"
+              @click="showLyricSeekList = !showLyricSeekList"
+            >
+              <q-tooltip anchor="top middle" self="bottom middle">
+                歌词选择
               </q-tooltip>
             </q-btn>
 
@@ -239,6 +271,10 @@
           <div class="col-auto relative-position">{{ formatSeconds(currentTime) }}</div>
           <AudioElement class="col" />
           <div class="col-auto relative-position">{{ formatSeconds(duration) }}</div>
+          <!-- 转码状态，悬浮显示在进度行中间 -->
+          <div class="text-caption" style="position: absolute; left: 50%; transform: translate(-50%, 70%);">
+            <TranscodingStatus v-if="playingTranscode" :trackHash="currentPlayingFile.hash" />
+          </div>
         </div>
 
         <!-- Place holder for iOS -->
@@ -270,7 +306,18 @@
         <!-- HTML5 volume in iOS is read-only -->
         <div class="row items-center q-mx-lg" style="height: 50px" v-if="!$q.platform.is.ios">
           <q-icon name="volume_down" size="sm" class="col-auto" />
-          <q-slider v-model="volume" :min="0" :max="1" :step="0.01" class="col q-mx-md"/>
+          <q-slider v-model="volume" :min="0" :max="1" :step="0.01" class="col q-mx-md" :disable="proxyGain > 1"/>
+          <!-- 音量大于1时的增益滑块（仅在开启音频可视化时可用） -->
+          <q-slider
+            v-if="enableVisualizer && volume >= 1"
+            v-model="proxyGain"
+            class="q-mx-sm"
+            style="max-width: 20%"
+            :min="1"
+            :max="1.5"
+            :step="0.01"
+            label
+          />
           <q-icon name="volume_up" size="sm" class="col-auto" />
         </div>
       </q-card>
@@ -358,6 +405,11 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <!-- 歌词选择（跳转）对话框 -->
+    <q-dialog v-model="showLyricSeekList" seamless>
+      <LyricSelection />
+    </q-dialog>
   </div>
 </template>
 
@@ -366,6 +418,8 @@ import draggable from 'vuedraggable'
 import AudioElement from 'components/AudioElement'
 import Scrollable from 'components/Scrollable'
 import AudioEqualizer from 'components/AudioEqualizer'
+import LyricSelection from 'components/LyricSelection'
+import TranscodingStatus from 'components/TranscodingStatus'
 import { mapState, mapGetters, mapMutations } from 'vuex'
 import { formatSeconds } from '../utils'
 import { debounce } from 'quasar'
@@ -378,6 +432,8 @@ export default {
     AudioElement,
     Scrollable,
     AudioEqualizer,
+    LyricSelection,
+    TranscodingStatus,
   },
 
   data () {
@@ -398,6 +454,10 @@ export default {
       fixWhoStartFirst: "", // "audio", "lyric" // 先看到的歌词，还是先听到的声音
       fixStartMills: 0,
       fixStopMills: 0,
+
+      showLyricSeekList: false, // 歌词选择（跳转）对话框
+      isBuggyIOS: false, // 检测到 iOS 17.3+ 的后台连播 bug
+      proxyGain: 1, // 音频可视化链路上的增益（可以大于1放大音量）
     }
   },
 
@@ -412,6 +472,8 @@ export default {
     if (this.$q.platform.is.desktop) {
       window.addEventListener('keydown', this.onKeyDown);
     }
+
+    this.detectBuggyIOS()
   },
 
   beforeDestroy() {
@@ -494,6 +556,13 @@ export default {
     },
     lyricSyncDialog() {
       this.fixState = 'ready';
+    },
+
+    proxyGain(val) {
+      if (this.enableVisualizer && this.$store.state.AudioPlayer.audioAnalyser) {
+        this.$store.state.AudioPlayer.audioAnalyser.gain.gain.value = val;
+        console.log("set audio gain: ", this.$store.state.AudioPlayer.audioAnalyser.gain.gain.value)
+      }
     }
   },
 
@@ -599,6 +668,7 @@ export default {
 
     ...mapState('AudioPlayer', [
       'playing',
+      'playingTranscode',
       'hide',
       'currentTime',
       'duration',
@@ -616,6 +686,8 @@ export default {
       'forwardSeekMode',
       'hasLyric',
       'lyricOffsetSeconds',
+      'lyricLines',
+      'transcodeOption',
     ]),
     
     ...mapGetters('AudioPlayer', [
@@ -668,6 +740,7 @@ export default {
       'REMOVE_FROM_QUEUE',
       'EMPTY_QUEUE',
       'SET_VOLUME',
+      'SET_NEW_CURRENT_TIME',
     ]),
 
     samCoverUrl (hash) {
@@ -867,7 +940,7 @@ export default {
 
     onKeyDown(event) {
       // console.warn("key down code = ", event.code, ", activeElement is ", document.activeElement); 
-      if (document.activeElement.tagName === "INPUT") return; // 禁止文本编辑的按键响应
+      if (["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) return; // 禁止文本编辑的按键响应
       if (this.playWorkId === 0) return; // 尚未播放任何作品时，禁止快捷键操作
       const volumeStep = 0.04; // volume is between [0.0, 1.0]
 
@@ -888,6 +961,22 @@ export default {
 
       event.preventDefault()
       event.stopPropagation()
+    },
+
+    detectBuggyIOS() {
+      this.isBuggyIOS = false;
+      if (localStorage.shownedBuggyIOSOnce) return;
+      try {
+        if (this.$q.platform.is.safari && !this.$q.platform.is.desktop) {
+          const match = /Version\/(\d*\.\d*\.\d*)/.exec(window.navigator.appVersion);
+          if (!match) return;
+          const [major, minor] = match[1].split(".").map(x => parseInt(x));
+          if (major >= 17 && minor >= 3) this.isBuggyIOS = true;
+          localStorage.shownedBuggyIOSOnce = true;
+        }
+      } catch (err) {
+        console.error(err)
+      }
     },
   },
 

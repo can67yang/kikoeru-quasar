@@ -1,6 +1,17 @@
-import { LocalStorage } from 'quasar'
+import { Dark, LocalStorage } from 'quasar'
 import getters from './getters'
-import state, { SWAP_SEEK_BUTTON_KEY, ENABLE_VISUALIZER_KEY, ENABLE_PIP_LYRICS, ENABLE_VIDEO_SOURCE_KEY, AI_SERVER_URL_KEY, OLD_WORK_CARD_UI_STYLE_KEY } from './state'
+import state, {
+  SWAP_SEEK_BUTTON_KEY, ENABLE_VISUALIZER_KEY, ENABLE_PIP_LYRICS, ENABLE_VIDEO_SOURCE_KEY, AI_SERVER_URL_KEY,
+  OLD_WORK_CARD_UI_STYLE_KEY, DARK_MODE_KEY, WORK_LIST_MODE_KEY, ENABLE_SHOW_RECENT_KEY,
+  OLD_SLEEP_TIMER_UI_STYLE_KEY, TRANSCODE_OPTION_KEY, TRANSCODE_FROM_TYPES_KEY,
+} from './state'
+
+// 深色模式循环顺序：深色 -> 浅色 -> 跟随系统 -> 深色
+const DARK_MODE_CYCLE = {
+  true: false,
+  false: 'auto',
+  auto: true,
+}
 
 const mutations = {
   TOGGLE_HIDE (state) {
@@ -155,6 +166,12 @@ const mutations = {
   SET_CURRENT_LYRIC: (state, line) => {
     state.currentLyric = line
   },
+  SET_CURRENT_LYRIC_LINE_NUMBER: (state, value) => {
+    state.currentLyricLineNumber = value
+  },
+  SET_LYRIC_LINES: (state, value) => {
+    state.lyricLines = value
+  },
   SET_LYRIC_OFFSET_SECONDS: (state, value) => {
     state.lyricOffsetSeconds = value;
   },
@@ -227,6 +244,48 @@ const mutations = {
   SET_OLD_WORK_CARD_UI_STYLE: (state, value) => {
     state.oldWorkCardUIStyle = value
     LocalStorage.set(OLD_WORK_CARD_UI_STYLE_KEY, value)
+  },
+
+  SET_OLD_SLEEP_TIMER_UI_STYLE: (state, value) => {
+    state.oldSleepTimerUIStyle = value
+    LocalStorage.set(OLD_SLEEP_TIMER_UI_STYLE_KEY, value)
+  },
+
+  SET_DARK_MODE: (state, value) => {
+    state.darkMode = value
+    LocalStorage.set(DARK_MODE_KEY, value)
+    Dark.set(value)
+  },
+
+  TOGGLE_DARK_MODE: (state) => {
+    const next = DARK_MODE_CYCLE[state.darkMode]
+    state.darkMode = next
+    LocalStorage.set(DARK_MODE_KEY, next)
+    Dark.set(next)
+  },
+
+  SET_WORK_LIST_MODE: (state, value) => {
+    state.workListMode = value
+    LocalStorage.set(WORK_LIST_MODE_KEY, value)
+  },
+
+  SET_ENABLE_SHOW_RECENT: (state, value) => {
+    state.enableShowRecent = value
+    LocalStorage.set(ENABLE_SHOW_RECENT_KEY, value)
+  },
+
+  SET_TRANSCODE_OPTION: (state, value) => {
+    state.transcodeOption = value
+    LocalStorage.set(TRANSCODE_OPTION_KEY, value)
+  },
+
+  SET_TRANSCODE_FROM_TYPES: (state, value) => {
+    state.transcodeFromTypes = value
+    LocalStorage.set(TRANSCODE_FROM_TYPES_KEY, value)
+  },
+
+  SET_PLAYING_TRANSCODE: (state, value) => {
+    state.playingTranscode = value
   },
 }
 

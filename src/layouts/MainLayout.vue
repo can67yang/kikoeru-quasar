@@ -108,18 +108,39 @@
             @click="toggleDarkMode"
           >
             <q-item-section avatar>
-              <q-icon name="dark_mode" />
+              <q-icon :name="currentDarkModeIconName" />
             </q-item-section>
 
             <q-item-section>
               <q-item-label class="text-subtitle1">
-                夜间模式
+                {{ currentDarkModeName }}
               </q-item-label>
+              <q-tooltip>
+                深色、浅色模式设置
+              </q-tooltip>
             </q-item-section>
           </q-item>
         </q-list>
 
         <q-list>
+          <q-item
+            clickable
+            v-ripple
+            exact
+            to="/about"
+            active-class="text-deep-purple text-weight-medium"
+          >
+            <q-item-section avatar>
+              <q-icon name="info" />
+            </q-item-section>
+
+            <q-item-section>
+              <q-item-label class="text-subtitle1">
+                关于
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+
           <q-item
             clickable
             v-ripple
@@ -157,7 +178,8 @@
       </q-card>
     </q-dialog>
 
-    <SleepMode v-model="showTimer" />
+    <SleepMode v-model="showTimer" v-if="oldSleepTimerUIStyle" />
+    <CountDownSleepMode v-model="showTimer" v-else />
 
     <q-page-container :class="{'page-container-style': isFullScreenPage, 'padding-bottom-play-bar': !isFullScreenPage}">
       <!-- <q-page padding> -->
@@ -188,6 +210,7 @@ import AudioPlayer from 'components/AudioPlayer'
 import LyricsBar from 'components/LyricsBar'
 import PIPLyrics from 'src/components/PIPLyrics'
 import SleepMode from 'components/SleepMode'
+import CountDownSleepMode from 'components/CountDownSleepMode'
 import NotifyMixin from '../mixins/Notification.js'
 import { mapMutations, mapState, mapGetters } from 'vuex'
 import { Dark } from 'quasar'
@@ -203,6 +226,7 @@ export default {
     AudioPlayer,
     LyricsBar,
     SleepMode,
+    CountDownSleepMode,
     PIPLyrics,
 },
 
@@ -303,9 +327,29 @@ export default {
       authEnabled: 'auth'
     }),
     
+    currentDarkModeName () {
+      switch (this.darkMode) {
+        case true: return '深色模式';
+        case false: return '浅色模式';
+        case 'auto': return '跟随系统';
+        default: return 'Error';
+      }
+    },
+
+    currentDarkModeIconName () {
+      switch (this.darkMode) {
+        case true: return 'dark_mode';
+        case false: return 'light_mode';
+        case 'auto': return 'brightness_6';
+        default: return 'brightness_alert';
+      }
+    },
+
     ...mapState('AudioPlayer', [
       'playWorkId',
       'enablePIPLyrics',
+      'darkMode',
+      'oldSleepTimerUIStyle',
     ]),
 
     ...mapGetters('AudioPlayer', [
@@ -318,6 +362,7 @@ export default {
       'SET_REWIND_SEEK_TIME',
       'SET_FORWARD_SEEK_TIME',
       'SET_AI_SERVER_URL',
+      'TOGGLE_DARK_MODE',
     ]),
     initUser () {
       this.$axios.get('/api/auth/me')
@@ -443,8 +488,7 @@ export default {
     },
 
     toggleDarkMode() {
-      console.log("toggleDarkMode called")
-      Dark.toggle();
+      this.TOGGLE_DARK_MODE();
     },
 
     getLinks() {

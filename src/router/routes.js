@@ -13,6 +13,8 @@ import Folders from 'pages/Dashboard/Folders'
 import Scanner from 'pages/Dashboard/Scanner'
 import Advanced from 'pages/Dashboard/Advanced'
 import UserManage from 'pages/Dashboard/UserManage'
+import Syncer from 'pages/Dashboard/Syncer'
+import About from 'pages/About'
 
 function prefixRoutes(prefix, routes) {
   return routes.map((route) => {
@@ -41,6 +43,10 @@ const routes = [
       {
         path: 'usermanage',
         component: UserManage
+      },
+      {
+        path: 'syncer',
+        component: Syncer
       }
     ]
   },
@@ -90,6 +96,10 @@ const routes = [
       {
         path: 'ai_lyric',
         component: AILyricCenter
+      },
+      {
+        path: 'about',
+        component: About
       },
       ...prefixRoutes('favourites', [
         {

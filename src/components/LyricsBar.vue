@@ -13,11 +13,15 @@
           @mousedown="onCursorDown"
           @touchstart="onCursorDown"
           :class="$q.dark.isActive ? 'text-purple-7' : 'text-purple-11'">
-          <div class="lyricBackground" :class="$q.dark.isActive ? 'lyricBackgroundDarkMode' : 'lyricBackgroundLightMode'">
-            <span id="lyric"
+          <div class="lyricBackground" :class="$q.dark.isActive ? 'lyricBackgroundDarkMode' : 'lyricBackgroundLightMode'"
+            id="lyric">
+            <div
+              v-for="(line, index) in lyricLines"
+              :key="index"
+              class="lyric"
               :style="{'font-size': `${fontSize}rem`}">
-              {{currentLyric}}
-            </span>
+              {{ line }}
+            </div>
           </div>
         </div>
       </div>
@@ -33,6 +37,10 @@ export default {
     ...mapState('AudioPlayer', [
       'currentLyric'
     ]),
+
+    lyricLines() {
+      return this.currentLyric.split('\n');
+    },
   },
 
   data () {

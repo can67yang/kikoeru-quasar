@@ -75,6 +75,11 @@ export default {
           path: '/admin/scanner'
         },
         {
+          title: '同步',
+          icon: 'cloud_download',
+          path: '/admin/syncer'
+        },
+        {
           title: '用户管理',
           icon: 'person',
           path: '/admin/usermanage'

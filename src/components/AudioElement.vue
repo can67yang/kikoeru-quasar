@@ -12,7 +12,7 @@
       label
       :label-value="formatSeconds(displayCurrentTime)"
       />
-    <vue-plyr 
+    <vue-plyr
       ref="plyr"
       :hideControls="false"
       class="vue-plyr"
@@ -39,79 +39,12 @@
 </template>
 
 <script>
-import Lyric from 'lrc-file-parser'
+import Lyric from 'src/utils/lrc-file-parser'
 import { mapState, mapGetters, mapMutations } from 'vuex'
 import NotifyMixin from '../mixins/Notification.js'
-import { formatSeconds, basenameWithoutExt, audioLyricNameMatch, ServerApi, AILyricTaskStatus } from '../utils'
+import { formatSeconds, getExtensionWithoutDot, ServerApi } from '../utils'
+import { TranscodeOption } from 'src/store/module-AudioPlayer/getters'
 import { debounce } from 'quasar';
-
-function convert_srt_vtt_to_lrc(text) {
-  let lines = text.split("\n").map(l => l.trim())
-  let isVtt = lines[0] == 'WEBVTT';
-  if (isVtt) {
-    lines = lines.slice(1)
-  }
-
-  const timeParseRe = /(\d*):(\d*):(\d*)(\.|,)(\d*)\s*-->\s*[\d:.]*/
-
-  const parsingUnit = []; // [([minute, seconds, millseconds], '文字\n文字'), (), ..., ()]
-  let i = 0;
-  while(i < lines.length) {
-
-    // 注意 srt 和 vtt 字幕的毫秒区分符号一个是`,'另一个是`.
-    // audio.srt be like
-    // 1
-    // 00:01:22,343 --> 00:03:22,344
-    // 字幕，字幕
-    // 
-    // 2
-    // ...
-
-    // audio.vtt be like
-    // WEBVTT
-    // 
-    // 1
-    // 00:01:22.343 --> 00:03:22.344
-    // 字幕，字幕
-    // 
-    // 2
-    // ...
-
-    if (/^\d*$/.test(lines[i++])) { /* parse 序号 */
-      if (timeParseRe.test(lines[i])) { /* parse 时间戳 */
-        const [_/* whole string */ , h, m, s, _mill_sep /* ignore */, ms] = timeParseRe.exec(lines[i]).map(x => parseInt(x));
-        let texts = [];
-        i++;
-        while(i < lines.length && lines[i] != "") { /* parse 文字，直到空行 */
-          texts.push(lines[i++]);
-        }
-        parsingUnit.push([
-          [h, m, s, ms],
-          texts.join(' '),
-        ]);
-      }
-    }
-  } // parse srt vtt 完成
-
-  function padding(n, len) {
-    n = Math.ceil(n);
-    let s = `${n}`;
-    let pad = len - s.length;
-    if (pad > 0) {
-      for (let i = 0; i < pad; ++i) {
-        s = "0" + s;
-      }
-    }
-    return s;
-  }
-
-  function formatLrcTime([h, m, s, ms]) {
-    return padding(h * m, 2) + ":" + padding(m, 2) + ":" + padding(s, 2) + "." + padding(ms, 3);
-  }
-
-  const lrcContent = parsingUnit.map(([time, text]) => `[${formatLrcTime(time)}] ${text}`).join("\n");
-  return lrcContent;
-}
 
 export default {
   name: 'AudioElement',
@@ -120,9 +53,7 @@ export default {
 
   data() {
     return {
-      lrcContent: "",
       lrcObj: null,
-      lrcAvailable: false,
 
       // 音频播放器进度条实现有些trick，普通的slider不能直接用，
       // 因为time的更新源有两个【audio播放】【用户输入】，
@@ -140,6 +71,11 @@ export default {
     source () {
       // 从 LocalStorage 中读取 token
       const token = this.$q.localStorage.getItem('jwt-token') || ''
+      // 当前文件需要转码播放时，使用转码流
+      if (this.currentPlayingFile.hash && this.checkCurrentPlayingFileShouldUseTranscoding()) {
+        const bitRate = this.transcodeBitRate;
+        return `/api/media/transcode/${this.currentPlayingFile.hash}?token=${token}&bitRate=${bitRate}`
+      }
       // New API
       if (this.currentPlayingFile.mediaStreamUrl) {
         return `${this.currentPlayingFile.mediaStreamUrl}?token=${token}`
@@ -174,11 +110,16 @@ export default {
       'enableVideoSource',
       'lyricOffsetSeconds',
       'enablePIPLyrics',
+      'lyricLines',
+      'hasLyric',
+      'transcodeOption',
+      'transcodeFromTypes',
     ]),
 
     ...mapGetters('AudioPlayer', [
       'currentPlayingFile',
       'resumeHistroyDone',
+      'transcodeBitRate',
     ]),
 
     displayCurrentTime() {
@@ -193,7 +134,6 @@ export default {
         // 缓冲至可播放状态
         flag ? this.player.play() : this.player.pause()
       }
-      // this.playLrc(flag);
     },
 
     // watch source -> media.load() -> canPlay -> player.play()
@@ -203,6 +143,7 @@ export default {
         this.player.media.load();
         this.loadLrcFile();
         this.updateMediaSessionMetadata();
+        this.SET_PLAYING_TRANSCODE(this.checkCurrentPlayingFileShouldUseTranscoding())
       }
     },
 
@@ -242,19 +183,16 @@ export default {
       this.SET_NEW_CURRENT_TIME(-1); // 标记时间已经更新到media上了
     },
     lyricOffsetSeconds() {
-      this.playLrc(this.playing); // 强制更新一下歌词时间
+      this.updateLyric() // 强制更新一下歌词时间
     },
-    enablePIPLyrics(enablePIP) {
-      if (enablePIP) {
-        this.playLrc(false)
-      } else {
-        this.playLrc(this.playing)
-      }
+    lyricLines(lines) {
+      // 歌词行被外部（编辑器等）修改时，重新载入歌词行
+      this.lrcObj.setLyricObject(lines)
     }
   },
 
   created() {
-    this.debouncedPlayLrc = debounce(this.playLrc, 100, true /* 首次更改应当立即生效，对后续更改防抖动 */); // 防抖动
+    this.updateLyric = debounce(this.updateLyric, 100, true /* 首次更改应当立即生效，对后续更改防抖动 */); // 防抖动
   },
 
   methods: {
@@ -264,24 +202,30 @@ export default {
      * 当 外部暂停（线控暂停、软件切换）、用户控制暂停、seek 时会触发本事件
      */
     onPause() {
-      // console.log('onPause')
-      this.playLrc(false)
+      this.updateLyric()
       this.PAUSE()
     },
     /**
      * 当播放器真正开始播放时会触发本事件
      */
     onPlaying() {
-      // console.log('playing')
-      this.playLrc(true)
+      this.updateLyric()
       this.PLAY()
+      // 播放稳定后，提前为下一个文件请求转码，避免切换时等待
+      const currentSource = this.source;
+      setTimeout(() => {
+        if (this.source === currentSource) {
+          this.checkNextPlayingFileShouldUseTranscodingAndPreTranscode()
+        } else {
+          console.log("source changed, cancel this pre transcoding request")
+        }
+      }, 30 * 1000)
     },
     /**
      * 当播放器缓冲区空，被迫暂停加载时会触发本事件
      */
     onWaiting() {
-      // console.log('waiting')
-      this.playLrc(false)
+      this.updateLyric()
       this.PLAY()
     },
     ...mapMutations('AudioPlayer', [
@@ -293,6 +237,8 @@ export default {
       'NEXT_TRACK',
       'PREVIOUS_TRACK',
       'SET_CURRENT_LYRIC',
+      'SET_CURRENT_LYRIC_LINE_NUMBER',
+      'SET_LYRIC_LINES',
       'SET_VOLUME',
       'CLEAR_SLEEP_MODE',
       'SET_REWIND_SEEK_MODE',
@@ -301,6 +247,7 @@ export default {
       'RESUME_HISTROY_SECONDS_DONE',
       'SET_HAS_LYRIC',
       'SET_NEW_CURRENT_TIME',
+      'SET_PLAYING_TRANSCODE',
     ]),
 
     onCanplay () {
@@ -325,19 +272,13 @@ export default {
     onTimeupdate () {
       // 当目前的播放位置已更改时触发
       this.SET_CURRENT_TIME(this.player.currentTime)
-      if (this.enablePIPLyrics) this.debouncedPlayLrc(false) // 开启桌面歌词后，用视频的time更新事件驱动歌词更新，false表示禁用掉LrcObject本身的事件更新
+      if (this.hasLyric) this.updateLyric() // 用媒体的time更新事件驱动歌词更新
       if (this.sleepMode && this.sleepTime) {
-        const currentTime = new Date()
-        const currentHourStr = currentTime.getHours().toString().padStart(2, '0')
-        const currentMinuteStr = currentTime.getMinutes().toString().padStart(2, '0')
-        const sleepHourStr = this.sleepTime.match(/\d+/g)[0]
-        const sleepMinuteStr = this.sleepTime.match(/\d+/g)[1]
-        if (currentHourStr === sleepHourStr && currentMinuteStr === sleepMinuteStr) {
-          this.PAUSE()
-          this.CLEAR_SLEEP_MODE()
-          // Persist sleep mode settings
+        if (Date.now() > this.sleepTime) {
           this.$q.sessionStorage.set('sleepTime', null)
           this.$q.sessionStorage.set('sleepMode', false)
+          this.PAUSE()
+          this.CLEAR_SLEEP_MODE()
         }
       }
     },
@@ -379,33 +320,20 @@ export default {
     },
 
     onSeeked() {
-      // if (this.lrcAvailable) {
-      //   this.lrcObj.play(this.player.currentTime * 1000);
-      //   if (!this.playing) {
-      //     this.lrcObj.pause();
-      //   }
-      // }
-      this.playLrc(this.playing);
+      this.updateLyric()
     },
 
-
-    playLrc (playStatus) {
-      if (this.lrcAvailable) {
-        if (playStatus) {
-          this.lrcObj.play((this.player.currentTime + this.lyricOffsetSeconds) * 1000);
-        } else {
-          this.lrcObj.play((this.player.currentTime + this.lyricOffsetSeconds) * 1000); // update and pause lyric
-          this.lrcObj.pause();
-        }
+    // 根据当前播放时间更新歌词状态，返回true表示歌词行发生了变化
+    updateLyric() {
+      const seconds = this.player.currentTime + this.lyricOffsetSeconds;
+      if (this.lrcObj.updateTime(seconds)) {
+        this.SET_CURRENT_LYRIC(this.lrcObj.getCurrentLyric(seconds))
+        this.SET_CURRENT_LYRIC_LINE_NUMBER(this.lrcObj.currentLineNumber)
       }
     },
 
     createLrcObj () {
-        this.lrcObj = new Lyric({
-          onPlay: (line, text) => {
-            this.SET_CURRENT_LYRIC(text);
-          },
-        })
+        this.lrcObj = new Lyric()
     },
 
     async loadLrcFile () {
@@ -414,32 +342,22 @@ export default {
       const url = `/api/media/check-lrc/${fileHash}?token=${token}`;
 
       try {
-        // 首先向服务器查询是否有歌词
-        const check_response = await this.$axios.get(url)
-        if (!check_response.data.result) {
-          // 无lrc歌词，尝试去查询ai歌词
-          await this.tryLoadRemoteAILyric()
+        // 向服务器查询歌词，服务端直接返回解析好的歌词行
+        const response = await this.$axios.get(url)
+        if (!response.data.result) {
+          // 无歌词
+          console.log("无歌词")
+          this.resetToNoLyricStatus()
           return;
         }
 
-        // 有lrc歌词文件
-        this.lrcAvailable = true;
-        console.log('读入歌词');
-        const lrcUrl = `/api/media/stream/${check_response.data.hash}?token=${token}`;
-        const lyricExtension = check_response.data.lyricExtension.toLowerCase();
-
-        // 开始下载具体的lrc内容
-        const response = await this.$axios.get(lrcUrl)
-        console.log('歌词读入成功');
-        console.log('srt convert to lrc');
-        if (lyricExtension == ".srt" || lyricExtension == ".vtt") {
-          response.data = convert_srt_vtt_to_lrc(response.data);
-        }
-        this.lrcObj.setLyric(response.data);
-        this.lrcContent = response.data;
-        this.lrcObj.play(this.player.currentTime * 1000);
-        if (!this.playing) this.lrcObj.pause() // 加载歌词后，观察当前是否在播放音频，如果没有，则暂停歌词滚动
-        this.SET_HAS_LYRIC(true);
+        console.log("读入歌词");
+        const lyricLines = response.data.lrc;
+        this.SET_LYRIC_LINES(lyricLines)
+        this.$nextTick(() => {
+          this.updateLyric()
+          this.SET_HAS_LYRIC(true)
+        })
       } catch(error) {
         if (error.response) {
           // 请求已发出，但服务器响应的状态码不在 2xx 范围内
@@ -451,68 +369,16 @@ export default {
           console.error(error)
           this.showErrNotif(error.message || error);
         }
-        this.SET_HAS_LYRIC(false);
+        this.SET_HAS_LYRIC(false)
       }
     },
 
     resetToNoLyricStatus() {
       // 无歌词文件
-      this.lrcAvailable = false;
-      this.lrcObj.setLyric('');
-      this.lrcContent = '';
-      this.SET_CURRENT_LYRIC('');
-      this.SET_HAS_LYRIC(false);
-    },
-
-    async loadRemoteAILyricTaskId(aiTaskId) {
-      const lrcContent = await ServerApi.downloadLrc(aiTaskId)
-      this.lrcAvailable = true;
-      this.lrcObj.setLyric(lrcContent);
-      this.lrcContent = lrcContent;
-      this.lrcObj.play(this.player.currentTime * 1000);
-      if (!this.playing) this.lrcObj.pause() // 加载歌词后，观察当前是否在播放音频，如果没有，则暂停歌词滚动
-      this.SET_HAS_LYRIC(true);
-    },
-
-    async tryLoadRemoteAILyric() {
-      const workId = parseInt(this.currentPlayingFile.hash.replace(/\/.*/, "")); // 通过hash获取该文件对应的workId，返回number类型
-      const audioFileName = basenameWithoutExt(this.currentPlayingFile.title);
-
-      let tasks = [];
-      let useLooseLyric = false; // 宽松的歌词匹配策略
-      try {
-        do {
-          console.log("搜索ai歌词，第一阶段，严格匹配workId和文件title")
-          tasks = await ServerApi.searchWorkTask(workId, audioFileName);
-          tasks = tasks.filter(t => t.status == AILyricTaskStatus.SUCCESS)
-          useLooseLyric = false;
-          if (tasks.length >= 1) break;
-
-          console.log("搜索ai歌词，第二阶段，查找workId作品内所有歌词")
-          tasks = await ServerApi.searchWorkTask(workId);
-          tasks = tasks.filter((t) => t.status == AILyricTaskStatus.SUCCESS && audioLyricNameMatch(audioFileName, t.fileName))
-          useLooseLyric = true;
-          break;
-
-        /*eslint-disable no-constant-condition*/
-        } while(0);
-
-      } catch(e) {
-        console.log("查找ai歌词失败: ", e)
-      }
-
-      if (tasks.length >= 1) {
-        console.log(`  已找到ai歌词记录${tasks.length}个`)
-        
-        console.log(`  加载第一个歌词记录，id = ${tasks[0].id}`)
-        await this.loadRemoteAILyricTaskId(tasks[0].id)
-        if (useLooseLyric) {
-          this.$q.notify({message: "使用宽松的歌词匹配策略", timeout: 2000})
-        }
-      } else {
-        console.warn("没有找到ai歌词")
-        this.resetToNoLyricStatus(); // 没有找到ai歌词的话，则必然先没有本地歌词，清空歌词状态
-      }
+      this.lrcObj.setLyric('')
+      this.SET_CURRENT_LYRIC('')
+      this.SET_LYRIC_LINES([])
+      this.SET_HAS_LYRIC(false)
     },
 
     updateMediaSessionMetadata() {
@@ -525,13 +391,7 @@ export default {
             title: this.currentPlayingFile.title,
             artist: "",
             album: this.currentPlayingFile.workTitle,
-            // artwork: this.visualPlayerCoverUrl,
             artwork: [
-              // {
-              //   src: this.genCoverUrl(this.playWorkId, "visualPlayerCover"), // 图像太大，safari上有时会出现加载失败的问题
-              //   sizes: "600x600", // 随便写的尺寸
-              //   type: "image/jpg",
-              // },
               {
                 src: this.genCoverUrl(this.playWorkId, "main"),
                 sizes: "560x560",
@@ -589,6 +449,23 @@ export default {
         }, 100);
       }
      },
+
+    // 判断当前播放的文件是否需要使用转码播放
+    checkCurrentPlayingFileShouldUseTranscoding() {
+      return this.transcodeOption !== TranscodeOption.OFF
+        && this.transcodeFromTypes.includes(getExtensionWithoutDot(this.currentPlayingFile.title).toLowerCase())
+    },
+
+    // 播放稳定后，检查下一个文件是否需要转码，如果需要则提前向服务器发起转码请求
+    async checkNextPlayingFileShouldUseTranscodingAndPreTranscode() {
+      if (this.transcodeOption === TranscodeOption.OFF) return;
+      const nextTrack = this.queue[this.queueIndex + 1];
+      if (nextTrack && this.transcodeFromTypes.includes(getExtensionWithoutDot(nextTrack.title).toLowerCase())) {
+        console.log("pre transcode next file:", nextTrack.title)
+        const result = await ServerApi.askForTranscoding(nextTrack.hash, this.transcodeBitRate);
+        console.log("pre transcode request: ", result)
+      }
+    },
   },
 
   mounted () {
@@ -605,15 +482,18 @@ export default {
         splitter: null,
         merger: null,
         audioSrc: null,
+        gain: null, // 增益节点，用于在开启可视化时提供大于1的音量
       };
 
       analyser.audioSrc = audioCtx.createMediaElementSource(this.player.media);
       analyser.splitter = audioCtx.createChannelSplitter(2);
       analyser.merger = audioCtx.createChannelMerger(2);
+      analyser.gain = audioCtx.createGain();
       analyser.audioSrc.connect(analyser.splitter);
       analyser.splitter.connect(analyser.left, 0);
       analyser.splitter.connect(analyser.right, 1);
-      analyser.audioSrc.connect(audioCtx.destination)
+      analyser.audioSrc.connect(analyser.gain)
+      analyser.gain.connect(audioCtx.destination)
       this.SET_AUDIO_ANALYSER(analyser)
     }
 

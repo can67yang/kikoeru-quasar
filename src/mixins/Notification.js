@@ -23,6 +23,14 @@ export default {
         color: 'negative',
         icon: 'bug_report'
       })
+    },
+
+    showToast (message, timeout) {
+      this.$q.notify({
+        message,
+        color: 'secondary',
+        timeout
+      })
     }
   }
 }

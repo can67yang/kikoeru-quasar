@@ -10,6 +10,10 @@
       </q-breadcrumbs-el>
     </q-breadcrumbs>
 
+    <q-dialog v-model="edit_img">
+      <ImageEditor :src="edit_img_src" :work_id="metadata.id" />
+    </q-dialog>
+
     <q-dialog v-model="preview_img" full-width>
       <q-card v-if="preview_img_list.length">
         <q-card-section>
@@ -18,6 +22,7 @@
               <div class="text-h6">{{preview_img_name}}</div>
               <div class="text-subtitle2">{{ preview_img_idx+1 }}/{{ preview_img_list.length }}</div>
             </div>
+            <q-btn outline @click="editImg(preview_img_list[preview_img_idx])">编辑作为封面</q-btn>
             <div v-if="playWorkId > 0" class="col-auto">
               <q-btn outline @click="setVisualPlayerCover(preview_img_list[preview_img_idx])">用作可视化封面</q-btn>
             </div>
@@ -38,6 +43,22 @@
 
     <q-card>
       <q-list separator>
+        <q-item
+          clickable
+          v-ripple
+          v-if="path.length >= 1"
+          class="non-selectable"
+          @click="folderGoUp()"
+        >
+          <q-item-section avatar style="position: relative;">
+            <q-icon size="34px" color="amber-3" name="folder" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>..</q-item-label>
+            <q-item-label caption lines="1">返回上层文件夹</q-item-label>
+          </q-item-section>
+        </q-item>
+
         <q-item
           clickable
           v-ripple
@@ -95,6 +116,10 @@
                 <q-item-section>下一曲播放</q-item-section>
               </q-item>
 
+              <q-item clickable @click="editImg(item)" v-if="item.type === 'image'">
+                <q-item-section>编辑作为封面</q-item-section>
+              </q-item>
+
               <q-item clickable @click="download(item)">
                 <q-item-section>下载文件</q-item-section>
               </q-item>
@@ -112,6 +137,7 @@
 
 <script>
 import AIStatus from './AIStatus.vue';
+import ImageEditor from './ImageEditor.vue';
 import { mapState, mapGetters } from 'vuex'
 import { audioLyricNameMatch, basenameWithoutExt, ServerApi, AILyricTaskStatus } from 'src/utils'
 import { debounce } from 'quasar';
@@ -124,6 +150,7 @@ export default {
 
   components: {
     AIStatus,
+    ImageEditor,
   },
 
   data() {
@@ -131,6 +158,8 @@ export default {
       path: [],
       internalTree: [],
       preview_img: false,
+      edit_img: false,
+      edit_img_src: "",
       preview_img_idx: 0,
       preview_img_list: [],
       preview_img_hash: "",
@@ -151,6 +180,10 @@ export default {
     metadata: {
       type: Object,
       required: true,
+    },
+    importantTreePathArr: {
+      type: Array,
+      required: true,
     }
   },
 
@@ -159,6 +192,10 @@ export default {
       this.internalTree = value;
       this.initPath();
       this.updateTreeAITaskStatus();
+    },
+
+    importantTreePathArr () {
+      this.path = this.importantTreePathArr;
     },
 
     sumAITaskStatus(currentStatus) {
@@ -242,6 +279,12 @@ export default {
     
     onClickBreadcrumb (index) {
       this.path = this.path.slice(0, index+1)
+    },
+
+    folderGoUp () {
+      if (this.path.length >= 1) {
+        this.path = this.path.slice(0, this.path.length - 1);
+      }
     },
 
     onClickItem (item) {
@@ -378,6 +421,11 @@ export default {
       if (this.preview_img_list.length <= 1) return;
       const length = this.preview_img_list.length;
       this.preview_img_idx = (length +this.preview_img_idx + (next ? 1 : -1) ) % length;
+    },
+
+    editImg (imgItem) {
+      this.edit_img_src = this.originalImgSrc(imgItem);
+      this.edit_img = true;
     },
 
     async updateTreeAITaskStatus() {

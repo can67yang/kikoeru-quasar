@@ -86,9 +86,9 @@ module.exports = function (ctx) {
           exclude: /[\\/]node_modules[\\/]/
         })
       },
-      modern: true,
-      sourceMap: true,
-      devtool: 'source-map'
+      modern: false,
+      sourceMap: false,
+      
     },
 
     // Full list of options: https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-devServer

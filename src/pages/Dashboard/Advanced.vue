@@ -8,6 +8,104 @@
       <q-list>
         <q-item style="height: 70px;">
           <q-item-section>
+            <q-item-label>音频转码设置</q-item-label>
+            <q-item-label>是否开启转码，以及转码的质量</q-item-label>
+          </q-item-section>
+
+          <q-item-section avatar>
+            <q-btn-toggle
+              no-caps
+              rounded
+              unelevated
+              toggle-color="primary"
+              text-color="primary"
+              v-model="transcodeOptionTemp"
+              :options="transcodeOptionOptions"
+            />
+          </q-item-section>
+        </q-item>
+
+        <q-item style="height: 70px;">
+          <q-item-section>
+            <q-item-label>音频文件扩展名过滤</q-item-label>
+            <q-item-label>只有这些扩展名的文件才会开启转码（忽略大小写），都不选的话，相当于关闭转码</q-item-label>
+          </q-item-section>
+
+          <q-item-section avatar>
+            <div class="q-gutter-sm">
+              <q-checkbox dense label="wav" color="teal" v-model="transcodeFromTypesDict.wav"/>
+              <q-checkbox dense label="flac" color="orange" v-model="transcodeFromTypesDict.flac"/>
+              <q-checkbox dense label="avi" color="cyan" v-model="transcodeFromTypesDict.avi"/>
+              <q-checkbox dense label="mp4" color="pink" v-model="transcodeFromTypesDict.mp4"/>
+            </div>
+          </q-item-section>
+        </q-item>
+
+        <q-item style="height: 70px;">
+          <q-item-section>
+            <q-item-label>强制标签名反和谐</q-item-label>
+            <q-item-label>将目前数据库内存储dlsite标签名，反和谐，恢复原始名称</q-item-label>
+          </q-item-section>
+
+          <q-item-section avatar>
+            <q-btn icon="restart_alt" @click="uncensorTags"/>
+          </q-item-section>
+        </q-item>
+
+        <q-item style="height: 70px;">
+          <q-item-section>
+            <q-item-label>列表展示形式</q-item-label>
+            <q-item-label>可选择分页展示或者瀑布流</q-item-label>
+          </q-item-section>
+
+          <q-item-section avatar>
+            <q-btn-toggle
+              no-caps
+              rounded
+              unelevated
+              toggle-color="primary"
+              text-color="primary"
+              v-model="workListModeTemp"
+              :options="workListModeOptions"
+            />
+          </q-item-section>
+        </q-item>
+
+        <q-item style="height: 70px;">
+          <q-item-section>
+            <q-item-label>首页显示最近播放作品</q-item-label>
+            <q-item-label caption>选择是否在首页显示最近播放作品</q-item-label>
+          </q-item-section>
+
+          <q-item-section avatar>
+            <q-toggle :value="enableShowRecent" @input="changeEnableShowRecent" dense/>
+          </q-item-section>
+        </q-item>
+
+        <q-item style="height: 70px;">
+          <q-item-section>
+            <q-item-label>深色模式设置</q-item-label>
+          </q-item-section>
+
+          <q-item-section avatar>
+            <q-btn-toggle
+              no-caps
+              rounded
+              unelevated
+              toggle-color="primary"
+              text-color="primary"
+              v-model="darkModeTemp"
+              :options="[
+                { label: '浅色模式', value: false },
+                { label: '深色模式', value: true },
+                { label: '跟随系统', value: 'auto' }
+              ]"
+            />
+          </q-item-section>
+        </q-item>
+
+        <q-item style="height: 70px;">
+          <q-item-section>
             <q-item-label>高级音频模式</q-item-label>
             <q-item-label caption>支持显示音频特效、左右声道反转等音频功能，建议在桌面浏览器中开启，移动端iOS设备会有声音播放bug</q-item-label>
           </q-item-section>
@@ -38,6 +136,17 @@
             <q-toggle :value="oldWorkCardUIStyle" @input="changeOldWorkCardUIStyle" dense/>
           </q-item-section>
         </q-item>
+
+        <q-item style="height: 70px;">
+          <q-item-section>
+            <q-item-label>睡眠时钟设置模式</q-item-label>
+            <q-item-label caption>当前模式：{{ oldSleepTimerUIStyle ? "设定停止播放的时间点" : "按照分钟开始倒计时" }}</q-item-label>
+          </q-item-section>
+
+          <q-item-section avatar>
+            <q-toggle :value="oldSleepTimerUIStyle" @input="changeOldSleepTimerUIStyle" dense/>
+          </q-item-section>
+        </q-item>
       </q-list>
     </q-card>
     <q-card class="q-ma-md">
@@ -54,9 +163,9 @@
 
           <q-item-section avatar>
             <div class="q-gutter-sm">
-              <q-radio dense v-model="rewindSeekTime" val=5 label="5 秒" />
-              <q-radio dense v-model="rewindSeekTime" val=10 label="10 秒" />
-              <q-radio dense v-model="rewindSeekTime" val=30 label="30 秒" />
+              <q-radio dense v-model="rewindSeekTime" val="5" label="5 秒" />
+              <q-radio dense v-model="rewindSeekTime" val="10" label="10 秒" />
+              <q-radio dense v-model="rewindSeekTime" val="30" label="30 秒" />
             </div>
           </q-item-section>
         </q-item>
@@ -95,6 +204,18 @@
               <q-radio dense v-model="config.tagLanguage" val="zh-cn" label="简" />
               <q-radio dense v-model="config.tagLanguage" val="zh-tw" label="繁" />
               <q-radio dense v-model="config.tagLanguage" val="ja-jp" label="日" />
+              <q-radio dense v-model="config.tagLanguage" val="en-us" label="Eng" />
+              <q-btn
+                dense
+                color="primary"
+                label="刷新标签名称"
+                :loading="refreshTagsLoading"
+                @click="refreshTagNames"
+              >
+                <q-tooltip>
+                按照标签语言，强制刷新数据库内标签名为选定的语言（先保存），用于修复此前的标签语言名称异常问题
+              </q-tooltip>
+              </q-btn>
             </div>
           </q-item-section>
         </q-item>
@@ -220,6 +341,33 @@
       <q-list>
         <q-item style="height: 70px;">
           <q-item-section>
+            <q-item-label>重点文件展示配置</q-item-label>
+            <q-item-label caption>配置哪些是重点文件，作品详情首次展示时，自动跳转到这些文件数量最多，或者统计时长最长的文件夹</q-item-label>
+          </q-item-section>
+
+          <q-item-section>
+            <div>
+              <q-btn class="q-ma-sm" padding="none sm" color="primary" size="sm" @click="config.importantWorkTreeOption = 'off'">关闭</q-btn>
+              <q-btn class="q-ma-sm" padding="none sm" color="primary" size="sm" @click="config.importantWorkTreeOption = 'count:mp3$'">mp3数量最多</q-btn>
+              <q-btn class="q-ma-sm" padding="none sm" color="primary" size="sm" @click="config.importantWorkTreeOption = 'count:(mp3|wav)$'">mp3或wav数量最多</q-btn>
+              <q-btn class="q-ma-sm" padding="none sm" color="primary" size="sm" @click="config.importantWorkTreeOption = 'time:(mp3|wav)$'">mp3或wav总计时长最长</q-btn>
+              <q-btn class="q-ma-sm" padding="none sm" color="primary" size="sm" @click="config.importantWorkTreeOption = 'time:(mp3|wav|mp4)$'">mp3、wav、mp4总计时长最长</q-btn>
+            </div>
+          </q-item-section>
+
+          <q-item-section avatar>
+            <q-input
+              type="text"
+              input-class="text-right"
+              v-model="config.importantWorkTreeOption"
+              :error="!isImportantWorkTreeOptionValid"
+              :error-message="importantWorkTreeOptionErrorMsg"
+            />
+          </q-item-section>
+        </q-item>
+
+        <q-item style="height: 70px;">
+          <q-item-section>
             <q-item-label>最大递归扫描深度</q-item-label>
             <q-item-label caption>默认 2</q-item-label>
           </q-item-section>
@@ -241,6 +389,17 @@
 
           <q-item-section side>
             <q-toggle v-model="config.skipCleanup" dense />
+          </q-item-section>
+        </q-item>
+
+        <q-item>
+          <q-item-section>
+            <q-item-label>启用文件监听（需重启服务器）</q-item-label>
+            <q-item-label caption>启用后，监听文件夹变化，自动将新作品加入数据库（实验性功能）</q-item-label>
+          </q-item-section>
+
+          <q-item-section side>
+            <q-toggle v-model="config.enableFileWatcher" dense />
           </q-item-section>
         </q-item>
       </q-list>
@@ -407,7 +566,8 @@
       </q-list>
     </q-card>
 
-    <div class="q-ma-lg row justify-end">
+    <div class="save-btn-container-placeholder"/>
+    <div class="save-btn-container">
       <q-btn :loading="loading" label="保存" type="submit" color="primary" />
     </div>
   </q-form>
@@ -416,6 +576,8 @@
 <script>
 import NotifyMixin from '../../mixins/Notification.js'
 import { mapState } from 'vuex'
+import { WorkListMode } from '../../utils.js'
+import { TranscodeOption } from 'src/store/module-AudioPlayer/getters'
 
 export default {
   name: 'Advanced',
@@ -426,9 +588,49 @@ export default {
     return {
       config: {},
       loading: false,
+      refreshTagsLoading: false,
       rewindSeekTime: '5',
       forwardSeekTime: '30',
-      
+      darkModeTemp: 'auto',
+      workListModeTemp: WorkListMode.WATERFALL,
+      workListModeOptions: [
+        { label: '瀑布流', value: WorkListMode.WATERFALL },
+        { label: '分页', value: WorkListMode.PAGINATION }
+      ],
+      transcodeOptionTemp: TranscodeOption.OFF,
+      transcodeOptionOptions: [
+        { label: '禁用转码', value: TranscodeOption.OFF },
+        { label: '转码AAC(128k) 体积小，音质较低', value: TranscodeOption.AAC_128 },
+        { label: '转码AAC(320k) 体积较大，音质高', value: TranscodeOption.AAC_320 }
+      ],
+      transcodeFromTypesDict: JSON.parse(JSON.stringify({ wav: false, flac: false, avi: false, mp4: false })),
+      isImportantWorkTreeOptionValid: true,
+      importantWorkTreeOptionErrorMsg: ''
+    }
+  },
+
+  watch: {
+    darkModeTemp (value) {
+      this.$store.commit('AudioPlayer/SET_DARK_MODE', value)
+    },
+
+    workListModeTemp (value) {
+      this.$store.commit('AudioPlayer/SET_WORK_LIST_MODE', value)
+    },
+
+    transcodeOptionTemp (value) {
+      this.$store.commit('AudioPlayer/SET_TRANSCODE_OPTION', value)
+    },
+
+    transcodeFromTypesDict: {
+      handler (newValue, oldValue) {
+        this.$store.commit('AudioPlayer/SET_TRANSCODE_FROM_TYPES', this.transcodeFromTypesTemp)
+      },
+      deep: true
+    },
+
+    'config.importantWorkTreeOption' () {
+      this.isImportantWorkTreeOptionValid = this.checkImportantWorkTreeOptionValid()
     }
   },
 
@@ -437,7 +639,17 @@ export default {
       'oldWorkCardUIStyle',
       'enableVideoSource',
       'enableVisualizer',
+      'darkMode',
+      'workListMode',
+      'enableShowRecent',
+      'oldSleepTimerUIStyle',
+      'transcodeOption',
+      'transcodeFromTypes',
     ]),
+
+    transcodeFromTypesTemp () {
+      return Object.keys(this.transcodeFromTypesDict).filter(t => this.transcodeFromTypesDict[t]).join(',')
+    }
   },
 
   methods: {
@@ -486,8 +698,11 @@ export default {
     },
 
     changeOldWorkCardUIStyle(value) {
-      console.log("change old work card ui to: ", value, typeof(value));
       this.$store.commit('AudioPlayer/SET_OLD_WORK_CARD_UI_STYLE', value);
+    },
+
+    changeOldSleepTimerUIStyle(value) {
+      this.$store.commit('AudioPlayer/SET_OLD_SLEEP_TIMER_UI_STYLE', value);
     },
 
     changeEnableVideoSource(value) {
@@ -496,7 +711,87 @@ export default {
 
     changeEnableVisualizer(value) {
       this.$store.commit('AudioPlayer/SET_ENABLE_VISUALIZER', value);
+    },
+
+    changeEnableShowRecent(value) {
+      this.$store.commit('AudioPlayer/SET_ENABLE_SHOW_RECENT', value);
+    },
+
+    async uncensorTags() {
+      this.$q.dialog({
+        title: '注意',
+        message: '此操作无法回滚，确定要将标签名反和谐吗？',
+        cancel: '取消',
+        ok: '确定'
+      }).onOk(async () => {
+        this.$axios.post('/api/uncensor/tags')
+          .then((response) => {
+            this.$q.notify('修改成功')
+          })
+          .catch((error) => {
+            this.$q.notify('修改失败', error.message)
+            console.error(error)
+          })
+      })
+    },
+
+    refreshTagNames() {
+      this.refreshTagsLoading = true
+      this.$axios.post('/api/config/admin/refresh-tags')
+        .then((response) => {
+          this.$q.notify(response.data.message)
+        })
+        .catch((error) => {
+          this.$q.notify('刷新失败', error.message)
+          console.error(error)
+        })
+        .finally(() => {
+          this.refreshTagsLoading = false
+        })
+    },
+
+    checkImportantWorkTreeOptionValid() {
+      const option = this.config.importantWorkTreeOption;
+      if (option == 'off') {
+        this.importantWorkTreeOptionErrorMsg = ''
+        return true
+      }
+
+      const parts = option.split(':', 2)
+      if (parts.length != 2) {
+        this.importantWorkTreeOptionErrorMsg = '重要文件夹配置项无效，配置不全'
+        return false
+      }
+
+      const mode = parts[0]
+      if (!['time', 'count'].includes(mode)) {
+        this.importantWorkTreeOptionErrorMsg = '重要文件夹配置项模式异常，请以 time: 或者 count: 开头'
+        return false
+      }
+
+      try {
+        RegExp(parts[1], 'i')
+      } catch (error) {
+        console.error(option, error)
+        this.importantWorkTreeOptionErrorMsg = '重要文件夹配置正则匹配创建失败，请在冒号后面输入正确的正则表达式'
+        return false
+      }
+
+      this.importantWorkTreeOptionErrorMsg = ''
+      return true
     }
+  },
+
+  mounted () {
+    this.darkModeTemp = this.darkMode
+    this.workListModeTemp = this.workListMode
+    this.transcodeOptionTemp = this.transcodeOption
+
+    const dict = JSON.parse(JSON.stringify({ wav: false, flac: false, avi: false, mp4: false }))
+    this.transcodeFromTypes.split(',').forEach(type => {
+      if (dict[type] !== undefined) dict[type] = true
+    })
+    this.transcodeFromTypesDict = dict
   },
 
   created () {
@@ -505,3 +800,16 @@ export default {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.save-btn-container-placeholder {
+  height: 60px;
+}
+
+.save-btn-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 10;
+}
+</style>

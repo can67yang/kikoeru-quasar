@@ -125,15 +125,15 @@ export const ServerApi = {
     return response.data;
   },
 
-  async deleteTask(id) {
+  async deleteTask(id, idArr) {
     const url = `/api/lyric/translate/${id}`;
-    const response = await axios.delete(url);
+    const response = await axios.delete(url, { data: { idArr } });
     return response.data;
-  }, 
+  },
 
-  async redoTask(id) {
+  async redoTask(id, idArr) {
     const url = `/api/lyric/translate/redo/${id}`;
-    const response = await axios.post(url);
+    const response = await axios.post(url, { idArr });
     return response.data;
   },
 
@@ -141,6 +141,137 @@ export const ServerApi = {
     const response = await axios.get(`/api/lyric/translate/lrc`, { params: { id } });
     return response.data.lrcContent;
   },
+
+  async queryLyric(id) {
+    const response = await axios.get(`/api/media/query-lrc/${id}`);
+    return response.data.lyricList;
+  },
+
+  async fetchLyric(id) {
+    const response = await axios.get(`/api/media/fetch-lrc/${id}`);
+    return response.data.lrc;
+  },
+
+  async saveLyric(id, writePath, lrc) {
+    const response = await axios.post(`/api/media/save-lrc/${id}`, { writePath, lrc });
+    return response.data;
+  },
+
+  async saveEditMeta(id, metadata) {
+    const response = await axios.post(`/api/edit/work/${id}`, metadata);
+    return response.data;
+  },
+
+  async getCandidates(type) {
+    const data = (await axios.get(`/api/${type}s`)).data.slice();
+    return data.sort((a, b) => b.count - a.count);
+  },
+
+  async saveEditImg(id, base64, type = 'main', fileName = 'img.jpg') {
+    const blob = await dataURLToBlob(base64, 'image/jpeg');
+    const form = new FormData();
+    form.append('file', blob, fileName);
+    form.append('type', type);
+    const response = await axios.post(`/api/edit/img/${id}`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
+  },
+
+  async recoverEditImg(id, type = 'main') {
+    const response = await axios.post(`/api/edit/recover/img/${id}`, { type });
+    return response.data;
+  },
+
+  async askForTranscoding(id, bitRate) {
+    const response = await axios.post(`/api/media/pre-transcode/${id}?bitRate=${bitRate}`);
+    return response.data;
+  },
+
+  async getTranscodingStatus(id, bitRate) {
+    const response = await axios.get(`/api/media/pre-transcode/${id}?bitRate=${bitRate}`);
+    return response.data;
+  },
+
+  async getSyncInfo(host, metaApi, trackApi, filter) {
+    const response = await axios.get('/api/syncer', {
+      params: { host, metaApi, trackApi, filter }
+    });
+    return response.data.tracks;
+  },
+
+  async newSyncTask(host, code, rootFolderName, overwrite, treeTracks) {
+    const response = await axios.post('/api/syncer', {
+      host, code, rootFolderName, overwrite, treeTracks
+    });
+    return response.data.id;
+  },
+
+  async getSyncTaskListStatus() {
+    const response = await axios.get('/api/syncer/task');
+    return response.data.info;
+  },
+
+  async deleteSyncTask(id) {
+    const response = await axios.delete('/api/syncer/task?id=' + id);
+    return response.data.success;
+  },
+
+  async stopSyncTask(id) {
+    const response = await axios.post(`/api/syncer/task/stop?id=${id}`);
+    return response.data.success;
+  },
+
+  async restartSyncTask(id) {
+    const response = await axios.post(`/api/syncer/task/restart?id=${id}`);
+    return response.data.success;
+  },
+
+  async getServerConfig() {
+    const response = await axios.get('/api/config/admin');
+    return response.data.config;
+  },
+}
+
+// works id 前缀表
+const ID_PREFIX = ['RJ', 'BJ', 'VJ', 'CC'];
+const ID_MAGIC = 1e12;
+
+export function idPrefix(id) {
+  const type = typeof id;
+  switch (type) {
+    case 'string': return id.substring(0, 2);
+    case 'number': return Math.floor(id / ID_MAGIC);
+    default: throw Error(`get id type failed, ${id} is unsupported type ${type}`);
+  }
+}
+
+export function idDigit(id) {
+  const type = typeof id;
+  switch (type) {
+    case 'string': return id.substring(2);
+    case 'number': return Math.floor(id % ID_MAGIC);
+    default: throw Error(`get id digit failed, ${id} is unsupported type ${type}`);
+  }
+}
+
+export function prefixWithFormatID(id) {
+  const digit = idDigit(id);
+  const prefix = idPrefix(id);
+  return `${ID_PREFIX[prefix]}${formatID(digit)}`;
+}
+
+function dataURLToBlob(base64, type = 'image/jpeg') {
+  return new Promise((resolve, reject) => {
+    const prefix = `data:${type};base64,`;
+    const data = base64.startsWith(prefix) ? base64.slice(prefix.length) : base64;
+    const binary = atob(data);
+    const bytes = new Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const buffer = new Uint8Array(bytes);
+    const blob = new Blob([buffer], { type });
+    resolve(blob);
+  });
 }
 
 export function editDistance(s1, s2) {
@@ -256,4 +387,43 @@ export const AdvanceSearchCondType = {
   VA: 2,
   TAG: 3,
   CIRCLE: 4,
+  CODE: 5, // 番号
+}
+
+// 作品列表展示模式
+export const WorkListMode = {
+  PAGINATION: 'pagination',
+  WATERFALL: 'waterfall',
+}
+
+// 字节数格式化
+export function formatBytes(bytes, decimals = 0) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + sizes[i];
+}
+
+// 取文件扩展名（不带点），非法时返回空字符串
+export function getExtensionWithoutDot(string) {
+  if (!string || typeof string !== 'string') return '';
+  const extIdx = string.lastIndexOf('.');
+  if (extIdx === -1 || extIdx === string.length - 1 || extIdx === 0 ||
+    string.indexOf('/', extIdx) !== -1 || string.indexOf('\\', extIdx) !== -1) {
+    return '';
+  }
+  return string.slice(extIdx + 1);
+}
+
+// 简短时长格式化：1时23分 / 45分 / 30秒
+export function shortHumanReadableSeconds(seconds) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor(seconds / 60) % 60;
+  const sec = Math.floor(seconds) % 60;
+  let result = '';
+  if (h > 0) result += h + '时';
+  if (m > 0) result += m + '分';
+  if (h <= 0 && m <= 0) result += sec + '秒';
+  return result;
 }
