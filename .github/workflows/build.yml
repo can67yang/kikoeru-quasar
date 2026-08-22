@@ -1,0 +1,35 @@
+name: Build frontend
+
+on:
+  push:
+    branches:
+      - alpha
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build PWA
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # node-sass@4 只支持 Node <=14
+      - name: Use Node.js 14
+        uses: actions/setup-node@v4
+        with:
+          node-version: '14'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Build (PWA, legacy, no sourcemap)
+        run: npx quasar build -m pwa
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kikoeru-quasar-dist
+          path: dist/pwa
+          if-no-files-found: error
