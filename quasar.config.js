@@ -40,7 +40,7 @@ export default configure(function (/* ctx */) {
 
     // https://v2.quasar.dev/quasar-cli-vite/building-vite
     build: {
-      sourcemap: false,
+      sourcemap: true,
       extendViteConf (viteConf) {
         // vite 配置扩展入口（替代旧的 extendWebpack）
       }
