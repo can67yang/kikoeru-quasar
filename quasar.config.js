@@ -42,7 +42,14 @@ export default configure(function (/* ctx */) {
     build: {
       sourcemap: true,
       extendViteConf (viteConf) {
-        // vite 配置扩展入口（替代旧的 extendWebpack）
+        // dev 模式下预热常用页面，减少首次导航时的按需编译卡顿
+        viteConf.server = viteConf.server || {}
+        viteConf.server.warmup = {
+          clientFiles: [
+            './index.html',
+            './src/{layouts,pages,components}/**/*.{vue,js}'
+          ]
+        }
       }
     },
 
