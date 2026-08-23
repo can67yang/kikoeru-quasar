@@ -170,7 +170,7 @@ const routes = [
  
 if (process.env.MODE !== 'ssr') {
   routes.push({
-    path: '*',
+    path: '/:catchAll(.*)*',
     component: () => import('pages/Error404.vue')
   })
 }
