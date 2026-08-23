@@ -1,9 +1,6 @@
 name: Build frontend
 
 on:
-  push:
-    branches:
-      - alpha
   workflow_dispatch:
 
 jobs:
