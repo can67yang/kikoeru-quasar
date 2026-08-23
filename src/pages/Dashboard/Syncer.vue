@@ -87,7 +87,7 @@
 </template>
 
 <script>
-import { ServerApi } from '../../utils'
+import { ServerApi } from '../../utils.js'
 import NotifyMixin from '../../mixins/Notification.js'
 import SyncTrackListEditor from '../../components/SyncTrackListEditor.vue'
 import SyncTaskListStatus from '../../components/SyncTaskListStatus.vue'

@@ -42,7 +42,7 @@
 
               <!-- 评价占比 -->
               <q-linear-progress
-                :value="rate.ratio/100"
+                :model-value="rate.ratio/100"
                 color="amber"
                 track-color="white"
                 style="height: 15px; width: 100px"
@@ -103,8 +103,9 @@
 </template>
 
 <script>
-import { shortHumanReadableSeconds } from 'src/utils'
-import CoverSFW from 'components/CoverSFW'
+import { useUserStore } from 'stores/user.js'
+import { shortHumanReadableSeconds } from 'src/utils.js'
+import CoverSFW from 'components/CoverSFW.vue'
 import NotifyMixin from '../mixins/Notification.js'
 
 export default {
@@ -172,7 +173,7 @@ export default {
     rating (newRating, oldRating) {
       if (oldRating) {
         const submitPayload = {
-          'user_name': this.$store.state.User.name, // 用户名不会被后端使用
+          'user_name': useUserStore().name, // 用户名不会被后端使用
           'work_id': this.metadata.id,
           'rating': newRating
         };

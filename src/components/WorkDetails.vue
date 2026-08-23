@@ -29,7 +29,7 @@
           <div class="col-auto">
             <q-rating
               v-model="rating"
-              @input="setRating"
+              @update:model-value="setRating"
               name="rating"
               size="sm"
               :color="userMarked ? 'blue' : 'amber'"
@@ -46,7 +46,7 @@
 
                 <!-- 评价占比 -->
                 <q-linear-progress
-                  :value="rate.ratio/100"
+                  :model-value="rate.ratio/100"
                   color="amber"
                   track-color="white"
                   style="height: 15px; width: 100px"
@@ -290,12 +290,14 @@
 </template>
 
 <script>
-import CoverSFW from 'components/CoverSFW'
-import WriteReview from './WriteReview'
-import EditMeta from './EditMeta'
+import { useUserStore } from 'stores/user.js'
+import CoverSFW from 'components/CoverSFW.vue'
+import WriteReview from './WriteReview.vue'
+import EditMeta from './EditMeta.vue'
 import NotifyMixin from '../mixins/Notification.js'
 import { ServerApi, prefixWithFormatID } from '../utils.js'
-import { mapState } from 'vuex'
+import { mapState } from 'pinia'
+import { useAudioPlayerStore } from 'stores/audioPlayer.js'
 
 function humanReadableSeconds(seconds) {
   const h = Math.floor(seconds / 3600);
@@ -359,7 +361,7 @@ export default {
         : null;
     },
 
-    ...mapState('AudioPlayer', [
+    ...mapState(useAudioPlayerStore, [
       'playing',
       'playWorkId'
     ]),
@@ -390,7 +392,7 @@ export default {
     setProgress (newProgress) {
       this.progress = newProgress;
       const submitPayload = {
-        'user_name': this.$store.state.User.name, // 用户名不会被后端使用
+        'user_name': useUserStore().name, // 用户名不会被后端使用
         'work_id': this.metadata.id,
         'progress': newProgress
       };
@@ -419,7 +421,7 @@ export default {
 
     setRating (newRating) {
       const submitPayload = {
-        'user_name': this.$store.state.User.name, // 用户名不会被后端使用
+        'user_name': useUserStore().name, // 用户名不会被后端使用
         'work_id': this.metadata.id,
         'rating': newRating
       };

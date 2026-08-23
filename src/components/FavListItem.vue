@@ -37,7 +37,7 @@
           <q-rating
             v-if="!hideRating"
             v-model="rating"
-            @input="setRating"
+            @update:model-value="setRating"
             size="sm"
             color="blue"
             icon="star_border"
@@ -84,7 +84,7 @@
           <q-btn-toggle
             v-if="mode === 'progress'"
             v-model="progress"
-            @input="setProgress"
+            @update:model-value="setProgress"
             dense
             no-caps
             rounded
@@ -109,7 +109,9 @@
 </template>
 
 <script>
-import WriteReview from './WriteReview'
+import { useUserStore } from 'stores/user.js'
+import { useAudioPlayerStore } from 'stores/audioPlayer.js'
+import WriteReview from './WriteReview.vue'
 import NotifyMixin from '../mixins/Notification.js'
 
 export default {
@@ -205,7 +207,7 @@ export default {
       // 取消标星可能是操作失误，所以不响应。应使用删除标记来删除打星
       if (newRating) {
         const submitPayload = {
-          'user_name': this.$store.state.User.name, // 用户名不会被后端使用
+          'user_name': useUserStore().name, // 用户名不会被后端使用
           'work_id': this.metadata.id,
           'rating': newRating
         };
@@ -234,7 +236,7 @@ export default {
 
     setProgress (newProgress) {
       const submitPayload = {
-        'user_name': this.$store.state.User.name, // 用户名不会被后端使用
+        'user_name': useUserStore().name, // 用户名不会被后端使用
         'work_id': this.metadata.id,
         'progress': newProgress
       };
@@ -262,14 +264,14 @@ export default {
     },
 
     playHistroy(workId, histroyState) {
-      this.$store.commit('AudioPlayer/SET_QUEUE', {
+      useAudioPlayerStore().SET_QUEUE({
         workId: workId,
         queue: histroyState.queue,
         index: histroyState.index,
         resetPlaying: false,
         resumeHistroySeconds: histroyState.seconds,
       })
-      // this.$store.commit('AudioPlayer/SET_RESUME_HISTROY_SECONDS', histroyState.seconds)
+      // useAudioPlayerStore().SET_RESUME_HISTROY_SECONDS(histroyState.seconds)
     }
   }
 

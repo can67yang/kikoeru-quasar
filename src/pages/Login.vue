@@ -15,7 +15,7 @@
 </template>
    
 <script>
-import { setAxiosHeaders } from 'boot/axios'
+import { setAxiosHeaders } from 'boot/axios.js'
 import NotifyMixin from '../mixins/Notification.js'
 
 export default {

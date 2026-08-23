@@ -138,10 +138,11 @@
 <script>
 import AIStatus from './AIStatus.vue';
 import ImageEditor from './ImageEditor.vue';
-import { mapState, mapGetters } from 'vuex'
-import { audioLyricNameMatch, basenameWithoutExt, ServerApi, AILyricTaskStatus } from 'src/utils'
+import { mapState } from 'pinia'
+import { useAudioPlayerStore } from 'stores/audioPlayer.js'
+import { audioLyricNameMatch, basenameWithoutExt, ServerApi, AILyricTaskStatus } from 'src/utils.js'
 import { debounce } from 'quasar';
-import { formatSeconds } from '../utils'
+import { formatSeconds } from '../utils.js'
 import NotifyMixin from '../mixins/Notification.js'
 
 export default {
@@ -247,12 +248,12 @@ export default {
       return item ? item.title : "";
     },
 
-    ...mapState('AudioPlayer', [
+    ...mapState(useAudioPlayerStore, [
       'playing',
       'playWorkId',
     ]),
 
-    ...mapGetters('AudioPlayer', [
+    ...mapState(useAudioPlayerStore, [
       'currentPlayingFile'
     ])
   },
@@ -297,7 +298,7 @@ export default {
       } else if (item.type === 'other') {
         this.download(item);
       } else if (this.currentPlayingFile.hash !== item.hash) {
-        this.$store.commit('AudioPlayer/SET_QUEUE', {
+        useAudioPlayerStore().SET_QUEUE({
           workId: this.metadata.id,
           queue: this.queue.concat(),
           index: this.queue.findIndex(file => file.hash === item.hash),
@@ -308,9 +309,9 @@ export default {
 
     onClickPlayButton (hash) {
       if (this.currentPlayingFile.hash === hash) {
-        this.$store.commit('AudioPlayer/TOGGLE_PLAYING')
+        useAudioPlayerStore().TOGGLE_PLAYING()
       } else {
-        this.$store.commit('AudioPlayer/SET_QUEUE', {
+        useAudioPlayerStore().SET_QUEUE({
           workId: this.metadata.id,
           queue: this.queue.concat(),
           index: this.queue.findIndex(file => file.hash === hash),
@@ -320,11 +321,11 @@ export default {
     },
 
     addToQueue (file) {
-      this.$store.commit('AudioPlayer/ADD_TO_QUEUE', file)
+      useAudioPlayerStore().ADD_TO_QUEUE(file)
     },
 
     playNext (file) {
-      this.$store.commit('AudioPlayer/PLAY_NEXT', file)
+      useAudioPlayerStore().PLAY_NEXT(file)
     },
 
     download (file) {
@@ -366,7 +367,7 @@ export default {
     setVisualPlayerCover (imgFile) {
       if (!imgFile) return;
       const urlWithoutToken = imgFile.mediaDownloadUrl ? `${imgFile.mediaDownloadUrl}` : `/api/media/download/${imgFile.hash}`;
-      this.$store.commit('AudioPlayer/SET_VISUAL_PLAYER_COVER_URL', urlWithoutToken);
+      useAudioPlayerStore().SET_VISUAL_PLAYER_COVER_URL(urlWithoutToken);
       this.$q.notify({
         message: "封面设置成功",
         actions: [
@@ -554,7 +555,7 @@ export default {
     this.updateTreeAITaskStatus();
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     this.disableIntervalCheckAITasks();
   }
 }

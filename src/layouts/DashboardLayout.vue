@@ -52,6 +52,7 @@
 </template>
 
 <script>
+import { useUserStore } from 'stores/user.js'
 import NotifyMixin from '../mixins/Notification.js'
 
 export default {
@@ -103,8 +104,8 @@ export default {
     success (payload) {
       this.showSuccNotif(payload.message)
       if (payload.auth) {
-        this.$store.commit('User/INIT', payload.user)
-        this.$store.commit('User/SET_AUTH', payload.auth)
+        useUserStore().INIT(payload.user)
+        useUserStore().SET_AUTH(payload.auth)
       }
     },
     error (err) {

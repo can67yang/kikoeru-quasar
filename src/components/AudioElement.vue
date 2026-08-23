@@ -12,11 +12,10 @@
       label
       :label-value="formatSeconds(displayCurrentTime)"
       />
-    <vue-plyr
+    <div
       ref="plyr"
-      :hideControls="false"
       class="vue-plyr"
-      :emit="['canplay', 'timeupdate', 'ended', 'seeked', 'playing', 'waiting', 'pause']" @canplay="onCanplay()"
+      @canplay="onCanplay()"
       @timeupdate="onTimeupdate()"
       @ended="onEnded()"
       @seeked="onSeeked()"
@@ -24,26 +23,29 @@
       @waiting="onWaiting()"
       @pause="onPause()"
     >
-      <!--使用video组件来播放音频和视频文件，同时隐藏原生的vue-plyr组件，这里的组件只会留下一个进度条的功能
+      <!--使用video组件来播放音频和视频文件，同时隐藏原生的plyr组件，这里的组件只会留下一个进度条的功能
       之所以用video，是因为video可以设置mp3等音频文件，也可以播放mp4等视频文件，在播放视频的时候，还能够用该video元素作为canvas绘制来源，
       反之，audio虽然可以播放video的音频，但是将其作为canvas的绘制源，因此倾向于使用video来播放所有媒体元素-->
       <!--注意，这里video设置了一个id，因为需要被其他组件通过document.querySelector方式进行查找引用-->
-      <video v-if="enableVideoSource" class="hide-in-global-page-for-pip" id="mediaVideo" crossorigin="anonymous" playsinline controls="controls" style="display: inline;">
+      <video v-if="enableVideoSource" ref="media" class="hide-in-global-page-for-pip" id="mediaVideo" crossorigin="anonymous" playsinline controls="controls" style="display: inline;">
         <source v-if="source" :src="source" />
       </video>
-      <audio v-else crossorigin="anonymous">
+      <audio v-else ref="media" crossorigin="anonymous">
         <source v-if="source" :src="source" />
       </audio>
-    </vue-plyr>
+    </div>
   </div>
 </template>
 
 <script>
-import Lyric from 'src/utils/lrc-file-parser'
-import { mapState, mapGetters, mapMutations } from 'vuex'
+import Plyr from 'plyr'
+import 'plyr/dist/plyr.css'
+import Lyric from 'src/utils/lrc-file-parser.js'
+import { mapState, mapActions } from 'pinia'
+import { useAudioPlayerStore } from 'stores/audioPlayer.js'
 import NotifyMixin from '../mixins/Notification.js'
-import { formatSeconds, getExtensionWithoutDot, ServerApi } from '../utils'
-import { TranscodeOption } from 'src/store/module-AudioPlayer/getters'
+import { formatSeconds, getExtensionWithoutDot, ServerApi } from '../utils.js'
+import { TranscodeOption } from 'stores/audioPlayer.js'
 import { debounce } from 'quasar';
 
 export default {
@@ -54,6 +56,7 @@ export default {
   data() {
     return {
       lrcObj: null,
+      plyrInstance: null,
 
       // 音频播放器进度条实现有些trick，普通的slider不能直接用，
       // 因为time的更新源有两个【audio播放】【用户输入】，
@@ -65,7 +68,7 @@ export default {
 
   computed: {
     player () {
-      return this.$refs.plyr.player
+      return this.plyrInstance
     },
 
     source () {
@@ -87,7 +90,7 @@ export default {
       }
     },
 
-    ...mapState('AudioPlayer', [
+    ...mapState(useAudioPlayerStore, [
       'playing',
       'queue',
       'queueIndex',
@@ -116,7 +119,7 @@ export default {
       'transcodeFromTypes',
     ]),
 
-    ...mapGetters('AudioPlayer', [
+    ...mapState(useAudioPlayerStore, [
       'currentPlayingFile',
       'resumeHistroyDone',
       'transcodeBitRate',
@@ -228,7 +231,7 @@ export default {
       this.updateLyric()
       this.PLAY()
     },
-    ...mapMutations('AudioPlayer', [
+    ...mapActions(useAudioPlayerStore, [
       'SET_DURATION',
       'SET_CURRENT_TIME',
       'PAUSE',
@@ -469,6 +472,11 @@ export default {
   },
 
   mounted () {
+    // 只保留进度条控制，其余控制全部隐藏（与旧 vue-plyr 配置一致）
+    this.plyrInstance = new Plyr(this.$refs.media, {
+      controls: ['progress']
+    })
+
     // 初始化音量
     this.SET_VOLUME(this.player.volume);
 

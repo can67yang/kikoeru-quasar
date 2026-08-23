@@ -69,7 +69,7 @@
         row-key="name"
         :selected-rows-label="getSelectedString"
         selection="multiple"
-        :selected.sync="selected"
+        v-model:selected="selected"
       />
       <div class="row justify-end">
         <q-btn :loading="loadingDeleteUsers" :disable="selected.length === 0" @click="confirm = true" color="primary" label="删除" />
@@ -92,6 +92,7 @@
 </template>
 
 <script>
+import { useUserStore } from 'stores/user.js'
 import NotifyMixin from '../../mixins/Notification.js'
 
 export default {
@@ -202,7 +203,7 @@ export default {
           this.showSuccNotif(response.data.message)
 
           // 仅当启用鉴权时跳转到登录页面
-          if (this.$store.state.User.auth) {
+          if (useUserStore().auth) {
             console.log('Got here')
             this.$router.push('/login')
           }

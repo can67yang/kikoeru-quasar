@@ -13,7 +13,8 @@
 
 <script>
 
-import { mapState } from 'vuex'
+import { mapState } from 'pinia'
+import { useAudioPlayerStore } from 'stores/audioPlayer.js'
 
 export default {
   name: 'AudioEqualizer',
@@ -38,7 +39,7 @@ export default {
   },
 
   computed: {
-    ...mapState("AudioPlayer", [
+    ...mapState(useAudioPlayerStore, [
       "enableVisualizer",
       "audioAnalyser",
     ])

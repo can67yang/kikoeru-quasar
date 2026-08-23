@@ -4,7 +4,7 @@
       <div class="col-lg-3 col-sm-12 col-xs-12">
           <q-btn-toggle
             v-model="mode"
-            @input="changeMode"
+            @update:model-value="changeMode"
             spread
             no-caps
             rounded
@@ -42,7 +42,7 @@
     >
       <q-btn-toggle
         v-model="progressFilter"
-        @input="changeProgressFilter"
+        @update:model-value="changeProgressFilter"
         toggle-color="primary"
         rounded
         class="outline-style"
@@ -78,7 +78,7 @@
 </template>
 
 <script>
-import FavListItem from 'components/FavListItem'
+import FavListItem from 'components/FavListItem.vue'
 import NotifyMixin from '../mixins/Notification.js'
 
 export default {

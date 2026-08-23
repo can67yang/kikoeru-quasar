@@ -20,36 +20,41 @@
     "kikoeru"
   ],
   "scripts": {
-    "test": "node_modules/.bin/eslint ."
+    "lint": "eslint src --ext .js,.vue",
+    "dev": "quasar dev",
+    "build": "quasar build -m pwa"
   },
   "dependencies": {
-    "@quasar/extras": "^1.10.4",
-    "axios": "^0.21.1",
+    "@quasar/extras": "^1.16.11",
+    "axios": "^1.7.7",
     "lrc-file-parser": "^1.0.7",
-    "plyr": "^3.6.7",
-    "quasar": "^1.15.12",
-    "vue-plyr": "^6.0.4",
-    "vue-slider-component": "^3.2.11",
-    "vue-socket.io": "^3.0.10",
-    "vuedraggable": "^2.24.3"
+    "pinia": "^2.2.2",
+    "plyr": "^3.7.8",
+    "quasar": "^2.16.9",
+    "register-service-worker": "^1.7.2",
+    "socket.io-client": "^4.7.5",
+    "vue": "^3.4.38",
+    "vue-draggable-plus": "^0.6.0",
+    "vue-router": "^4.4.3"
   },
   "devDependencies": {
-    "@quasar/app": "^1.9.6",
-    "eslint": "^7.25.0",
-    "eslint-loader": "^4.0.2",
-    "eslint-plugin-import": "^2.22.1",
-    "eslint-plugin-vue": "^7.9.0"
+    "@eslint/js": "^9.9.0",
+    "@quasar/app-vite": "~2.4.0",
+    "eslint": "^9.9.0",
+    "eslint-plugin-vue": "^9.28.0",
+    "sass": "^1.77.8",
+    "workbox-build": "^7.4.1"
   },
   "engines": {
-    "node": ">= 10.18.1",
-    "npm": ">= 6.13.4",
-    "yarn": ">= 1.21.1"
+    "node": ">= 20 < 23"
   },
   "browserslist": [
-    "last 1 version, not dead, ie >= 11"
+    "last 1 version",
+    "not dead"
   ],
-  "eslintIgnore": [
-    "dist/*",
-    "src/router/index.js"
-  ]
+  "allowScripts": {
+    "@parcel/watcher@2.6.0": true,
+    "core-js@3.50.0": true,
+    "esbuild@0.21.5": true
+  }
 }

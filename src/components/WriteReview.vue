@@ -75,6 +75,7 @@
 </template>
 
 <script>
+import { useUserStore } from 'stores/user.js'
 import NotifyMixin from '../mixins/Notification.js'
 
 export default {
@@ -127,7 +128,7 @@ export default {
 
     reviewPayload () {
       const submitPayload = {
-        'user_name': this.$store.state.User.name, // 用户名不会被后端使用
+        'user_name': useUserStore().name, // 用户名不会被后端使用
         'work_id': this.workid,
         'rating': this.rating,
         'review_text': this.reviewText,

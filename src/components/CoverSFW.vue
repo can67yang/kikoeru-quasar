@@ -46,7 +46,7 @@
 
 <script>
 
-import { formatID } from 'src/utils'
+import { formatID } from 'src/utils.js'
 
 export default {
   name: 'CoverSFW',

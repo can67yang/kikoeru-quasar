@@ -117,7 +117,7 @@ export default {
     this.resetChecker();
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     clearInterval(this.intervalId);
     this.intervalId = 0;
   },

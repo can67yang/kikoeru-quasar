@@ -1,5 +1,5 @@
 <template>
-    <q-dialog v-bind:value="value" v-on:input="$emit('input')" persistent>
+    <q-dialog v-bind:model-value="modelValue" @update:model-value="$emit('update:model-value', $event)" persistent>
       <q-card>
         <div class="q-pa-sm">
           <q-time
@@ -25,13 +25,14 @@
 </template> 
 
 <script>
-import { mapState, mapMutations } from 'vuex'
+import { mapState, mapActions } from 'pinia'
+import { useAudioPlayerStore } from 'stores/audioPlayer.js'
 
 export default {
   name: 'SleepMode',
 
   // v-model: showTimer from MainLayout
-  props: ['value'],
+  props: ['modelValue'],
 
   data() {
     return {
@@ -41,7 +42,7 @@ export default {
   },
 
   computed: {
-    ...mapState('AudioPlayer', [
+    ...mapState(useAudioPlayerStore, [
       'sleepTime',
       'sleepMode'
     ]),
@@ -76,7 +77,7 @@ export default {
   },
 
   methods: {
-    ...mapMutations('AudioPlayer', [
+    ...mapActions(useAudioPlayerStore, [
       'SET_SLEEP_TIMER',
       'CLEAR_SLEEP_MODE'
     ]),

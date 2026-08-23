@@ -192,7 +192,7 @@ export default {
     this.resizeObserver.observe(this.canvas);
   },
 
-  destroyed() {
+  unmounted() {
     this.resizeObserver.unobserve(this.canvas);
   }
 }

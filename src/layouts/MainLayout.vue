@@ -202,16 +202,17 @@
 </template>
 
 <script>
-import PlayerBar from 'components/PlayerBar'
-import AudioPlayer from 'components/AudioPlayer'
-import LyricsBar from 'components/LyricsBar'
-import FloatingLyricsWindow from 'src/components/FloatingLyricsWindow'
-import SleepMode from 'components/SleepMode'
-import CountDownSleepMode from 'components/CountDownSleepMode'
+import PlayerBar from 'components/PlayerBar.vue'
+import AudioPlayer from 'components/AudioPlayer.vue'
+import LyricsBar from 'components/LyricsBar.vue'
+import FloatingLyricsWindow from 'src/components/FloatingLyricsWindow.vue'
+import SleepMode from 'components/SleepMode.vue'
+import CountDownSleepMode from 'components/CountDownSleepMode.vue'
 import NotifyMixin from '../mixins/Notification.js'
-import { mapMutations, mapState, mapGetters } from 'vuex'
+import { mapState, mapActions } from 'pinia'
+import { useUserStore } from 'stores/user.js'
+import { useAudioPlayerStore } from 'stores/audioPlayer.js'
 import { Dark } from 'quasar'
-import { truncate } from 'fs'
 
 export default {
   name: 'MainLayout',
@@ -319,7 +320,7 @@ export default {
       return path && path.startsWith('/fullScreenPlayer');
     },
 
-    ...mapState('User', {
+    ...mapState(useUserStore, {
       userName: 'name',
       authEnabled: 'auth'
     }),
@@ -342,20 +343,20 @@ export default {
       }
     },
 
-    ...mapState('AudioPlayer', [
+    ...mapState(useAudioPlayerStore, [
       'playWorkId',
       'enablePIPLyrics',
       'darkMode',
       'oldSleepTimerUIStyle',
     ]),
 
-    ...mapGetters('AudioPlayer', [
+    ...mapState(useAudioPlayerStore, [
       'isQueueEmpty',
     ])
   },
 
   methods: {
-    ...mapMutations('AudioPlayer', [
+    ...mapActions(useAudioPlayerStore, [
       'SET_REWIND_SEEK_TIME',
       'SET_FORWARD_SEEK_TIME',
       'SET_AI_SERVER_URL',
@@ -364,8 +365,8 @@ export default {
     initUser () {
       this.$axios.get('/api/auth/me')
         .then((res) => {
-          this.$store.commit('User/INIT', res.data.user)
-          this.$store.commit('User/SET_AUTH', res.data.auth)
+          useUserStore().INIT(res.data.user)
+          useUserStore().SET_AUTH(res.data.auth)
         })
         .catch((error) => {
           if (error.response) {

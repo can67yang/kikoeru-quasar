@@ -78,7 +78,7 @@
           </q-item-section>
 
           <q-item-section avatar>
-            <q-toggle :value="enableShowRecent" @input="changeEnableShowRecent" dense/>
+            <q-toggle :model-value="enableShowRecent" @update:model-value="changeEnableShowRecent" dense/>
           </q-item-section>
         </q-item>
 
@@ -111,7 +111,7 @@
           </q-item-section>
 
           <q-item-section avatar>
-            <q-toggle :value="enableVisualizer" @input="changeEnableVisualizer" dense/>
+            <q-toggle :model-value="enableVisualizer" @update:model-value="changeEnableVisualizer" dense/>
           </q-item-section>
         </q-item>
 
@@ -122,7 +122,7 @@
           </q-item-section>
 
           <q-item-section avatar>
-            <q-toggle :value="enableVideoSource" @input="changeEnableVideoSource" dense/>
+            <q-toggle :model-value="enableVideoSource" @update:model-value="changeEnableVideoSource" dense/>
           </q-item-section>
         </q-item>
 
@@ -133,7 +133,7 @@
           </q-item-section>
 
           <q-item-section avatar>
-            <q-toggle :value="oldWorkCardUIStyle" @input="changeOldWorkCardUIStyle" dense/>
+            <q-toggle :model-value="oldWorkCardUIStyle" @update:model-value="changeOldWorkCardUIStyle" dense/>
           </q-item-section>
         </q-item>
 
@@ -144,7 +144,7 @@
           </q-item-section>
 
           <q-item-section avatar>
-            <q-toggle :value="oldSleepTimerUIStyle" @input="changeOldSleepTimerUIStyle" dense/>
+            <q-toggle :model-value="oldSleepTimerUIStyle" @update:model-value="changeOldSleepTimerUIStyle" dense/>
           </q-item-section>
         </q-item>
       </q-list>
@@ -575,9 +575,10 @@
 
 <script>
 import NotifyMixin from '../../mixins/Notification.js'
-import { mapState } from 'vuex'
+import { mapState } from 'pinia'
+import { useAudioPlayerStore } from 'stores/audioPlayer.js'
 import { WorkListMode } from '../../utils.js'
-import { TranscodeOption } from 'src/store/module-AudioPlayer/getters'
+import { TranscodeOption } from 'stores/audioPlayer.js'
 
 export default {
   name: 'Advanced',
@@ -611,20 +612,20 @@ export default {
 
   watch: {
     darkModeTemp (value) {
-      this.$store.commit('AudioPlayer/SET_DARK_MODE', value)
+      useAudioPlayerStore().SET_DARK_MODE(value)
     },
 
     workListModeTemp (value) {
-      this.$store.commit('AudioPlayer/SET_WORK_LIST_MODE', value)
+      useAudioPlayerStore().SET_WORK_LIST_MODE(value)
     },
 
     transcodeOptionTemp (value) {
-      this.$store.commit('AudioPlayer/SET_TRANSCODE_OPTION', value)
+      useAudioPlayerStore().SET_TRANSCODE_OPTION(value)
     },
 
     transcodeFromTypesDict: {
       handler (newValue, oldValue) {
-        this.$store.commit('AudioPlayer/SET_TRANSCODE_FROM_TYPES', this.transcodeFromTypesTemp)
+        useAudioPlayerStore().SET_TRANSCODE_FROM_TYPES(this.transcodeFromTypesTemp)
       },
       deep: true
     },
@@ -635,7 +636,7 @@ export default {
   },
 
   computed: {
-    ...mapState('AudioPlayer', [
+    ...mapState(useAudioPlayerStore, [
       'oldWorkCardUIStyle',
       'enableVideoSource',
       'enableVisualizer',
@@ -698,23 +699,23 @@ export default {
     },
 
     changeOldWorkCardUIStyle(value) {
-      this.$store.commit('AudioPlayer/SET_OLD_WORK_CARD_UI_STYLE', value);
+      useAudioPlayerStore().SET_OLD_WORK_CARD_UI_STYLE(value);
     },
 
     changeOldSleepTimerUIStyle(value) {
-      this.$store.commit('AudioPlayer/SET_OLD_SLEEP_TIMER_UI_STYLE', value);
+      useAudioPlayerStore().SET_OLD_SLEEP_TIMER_UI_STYLE(value);
     },
 
     changeEnableVideoSource(value) {
-      this.$store.commit('AudioPlayer/SET_ENABLE_VIDEO_SOURCE', value);
+      useAudioPlayerStore().SET_ENABLE_VIDEO_SOURCE(value);
     },
 
     changeEnableVisualizer(value) {
-      this.$store.commit('AudioPlayer/SET_ENABLE_VISUALIZER', value);
+      useAudioPlayerStore().SET_ENABLE_VISUALIZER(value);
     },
 
     changeEnableShowRecent(value) {
-      this.$store.commit('AudioPlayer/SET_ENABLE_SHOW_RECENT', value);
+      useAudioPlayerStore().SET_ENABLE_SHOW_RECENT(value);
     },
 
     async uncensorTags() {

@@ -32,8 +32,8 @@
           <div class="row items-center justify-between full-width">
             <div>
               <q-checkbox
-                :value="[false, 'maybe', true][node.selection]"
-                @input="onClickNode(node)"
+                :model-value="[false, 'maybe', true][node.selection]"
+                @update:model-value="onClickNode(node)"
               />
               <span>{{ node.title }}</span>
             </div>

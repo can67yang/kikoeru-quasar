@@ -28,7 +28,8 @@
 </template>
 
 <script>
-import { mapState, mapMutations, mapGetters } from 'vuex'
+import { mapState, mapActions } from 'pinia'
+import { useAudioPlayerStore } from 'stores/audioPlayer.js'
 
 const POSITION_KEY = 'pip_lyrics_position'
 const DEFAULT_WIDTH = 360
@@ -41,13 +42,13 @@ export default {
   name: 'FloatingLyricsWindow',
 
   computed: {
-    ...mapState('AudioPlayer', [
+    ...mapState(useAudioPlayerStore, [
       'currentLyric',
       'enablePIPLyrics',
       'playing',
     ]),
 
-    ...mapGetters('AudioPlayer', [
+    ...mapState(useAudioPlayerStore, [
       'isQueueEmpty',
     ]),
 
@@ -95,7 +96,7 @@ export default {
   },
 
   methods: {
-    ...mapMutations('AudioPlayer', {
+    ...mapActions(useAudioPlayerStore, {
       setEnablePIPLyrics: 'SET_ENABLE_PIP_LYRICS',
       playAudio: 'PLAY',
       pauseAudio: 'PAUSE',
@@ -376,7 +377,7 @@ export default {
     if (this.enablePIPLyrics) this.open()
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     this.detachDocumentPiP()
     window.removeEventListener('resize', this.onWindowResize)
     window.removeEventListener('pointermove', this.onPointerMove)

@@ -20,8 +20,9 @@
 </template>
    
 <script>
-import { mapState, mapGetters } from 'vuex'
-import LyricsBar from 'components/LyricsBar'
+import { mapState } from 'pinia'
+import { useAudioPlayerStore } from 'stores/audioPlayer.js'
+import LyricsBar from 'components/LyricsBar.vue'
 
 
 class Vec {
@@ -566,7 +567,7 @@ export default {
       }
     },
 
-    ...mapState('AudioPlayer', [
+    ...mapState(useAudioPlayerStore, [
       'visualPlayerCoverUrl',
       'audioAnalyser',
       'currentTime',
@@ -579,7 +580,7 @@ export default {
       'enableVideoSource'
     ]),
 
-    ...mapGetters('AudioPlayer', [
+    ...mapState(useAudioPlayerStore, [
       'currentPlayingFile',
       'isCurrentPlayingFileVideo'
     ]),
@@ -625,7 +626,7 @@ export default {
     this.$refs.container.addEventListener("fullscreenchange", this.onFullscreenChange)
     this.checkVisualEffect();
   },
-  beforeDestroy() {
+  beforeUnmount() {
     this.renderNotifier.stop = true;
     this.$refs.container.removeEventListener("fullscreenchange", this.onFullscreenChange)
     this.video = null;

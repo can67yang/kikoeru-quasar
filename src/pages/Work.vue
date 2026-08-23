@@ -8,12 +8,13 @@
 </template>
 
 <script>
-import WorkDetails from 'components/WorkDetails'
+import WorkDetails from 'components/WorkDetails.vue'
 // import WorkQueue from 'components/WorkQueue'
-import WorkTree from 'components/WorkTree'
-import RelatedWorks from 'components/RelatedWorks'
+import WorkTree from 'components/WorkTree.vue'
+import RelatedWorks from 'components/RelatedWorks.vue'
 import NotifyMixin from '../mixins/Notification.js'
-import { mapState } from 'vuex'
+import { mapState } from 'pinia'
+import { useAudioPlayerStore } from 'stores/audioPlayer.js'
 
 // 递归提取被标记为 important 的文件夹路径
 function getImportantTreePathArr(tree) {
@@ -48,7 +49,7 @@ export default {
   },
 
   computed: {
-    ...mapState('AudioPlayer', [
+    ...mapState(useAudioPlayerStore, [
       'playing',
       'playWorkId'
     ]),
@@ -111,7 +112,7 @@ export default {
 
     resumeMetadataPlayHistroy() {
       if (this.metadata.state && Array.isArray(this.metadata.state.queue) && this.metadata.state.queue.length !== 0) {
-        this.$store.commit('AudioPlayer/SET_QUEUE', {
+        useAudioPlayerStore().SET_QUEUE({
           workId: this.metadata.id,
           queue: this.metadata.state.queue,
           index: this.metadata.state.index,

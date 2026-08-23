@@ -1,20 +1,20 @@
-import MainLayout from 'layouts/MainLayout'
-import DashboardLayout from 'layouts/DashboardLayout'
+import MainLayout from 'layouts/MainLayout.vue'
+import DashboardLayout from 'layouts/DashboardLayout.vue'
 
-import Works from 'pages/Works'
-import Work from 'pages/Work'
-import List from 'pages/List'
-import Login from 'pages/Login'
-import Favourites from 'pages/Favourites'
-import FullScreenPlayer from 'pages/FullScreenPlayer'
-import AILyricCenter from 'pages/AILyricCenter'
+import Works from 'pages/Works.vue'
+import Work from 'pages/Work.vue'
+import List from 'pages/List.vue'
+import Login from 'pages/Login.vue'
+import Favourites from 'pages/Favourites.vue'
+import FullScreenPlayer from 'pages/FullScreenPlayer.vue'
+import AILyricCenter from 'pages/AILyricCenter.vue'
 
-import Folders from 'pages/Dashboard/Folders'
-import Scanner from 'pages/Dashboard/Scanner'
-import Advanced from 'pages/Dashboard/Advanced'
-import UserManage from 'pages/Dashboard/UserManage'
-import Syncer from 'pages/Dashboard/Syncer'
-import About from 'pages/About'
+import Folders from 'pages/Dashboard/Folders.vue'
+import Scanner from 'pages/Dashboard/Scanner.vue'
+import Advanced from 'pages/Dashboard/Advanced.vue'
+import UserManage from 'pages/Dashboard/UserManage.vue'
+import Syncer from 'pages/Dashboard/Syncer.vue'
+import About from 'pages/About.vue'
 
 function prefixRoutes(prefix, routes) {
   return routes.map((route) => {
@@ -167,7 +167,7 @@ const routes = [
 ]
 
 // Always leave this as last one
-// eslint-disable-next-line
+ 
 if (process.env.MODE !== 'ssr') {
   routes.push({
     path: '*',

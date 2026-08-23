@@ -201,7 +201,7 @@
         <!--分页模式顶部的页码跳转-->
         <div v-if="workListMode === WorkListMode.PAGINATION" class="row justify-center q-py-lg">
           <Pagination
-            :value="isLoading ? pagination.currentPage + 1 : pagination.currentPage"
+            :model-value="isLoading ? pagination.currentPage + 1 : pagination.currentPage"
             :max="Math.ceil(pagination.totalCount / pagination.pageSize)"
             @goto="gotoPage"
           />
@@ -249,7 +249,7 @@
         <!--分页模式底部的页码跳转-->
         <div v-if="workListMode === WorkListMode.PAGINATION && !isLoading && works.length > 4" class="row justify-center q-py-lg">
           <Pagination
-            :value="isLoading ? pagination.currentPage + 1 : pagination.currentPage"
+            :model-value="isLoading ? pagination.currentPage + 1 : pagination.currentPage"
             :max="Math.ceil(pagination.totalCount / pagination.pageSize)"
             @goto="gotoPage"
           />
@@ -266,13 +266,14 @@
 </template>
 
 <script>
-import WorkCard from 'components/WorkCard'
-import WorkListItem from 'components/WorkListItem'
+import WorkCard from 'components/WorkCard.vue'
+import WorkListItem from 'components/WorkListItem.vue'
 import NotifyMixin from '../mixins/Notification.js'
-import RecentWorks from 'src/components/RecentWorks'
-import Pagination from 'src/components/Pagination'
-import { mapState } from 'vuex'
-import OldWorkCard from 'src/components/OldWorkCard'
+import RecentWorks from 'src/components/RecentWorks.vue'
+import Pagination from 'src/components/Pagination.vue'
+import { mapState } from 'pinia'
+import { useAudioPlayerStore } from 'stores/audioPlayer.js'
+import OldWorkCard from 'src/components/OldWorkCard.vue'
 import { debounce } from 'quasar'
 import { AdvanceSearchCondType, WorkListMode } from '../utils.js'
 
@@ -445,7 +446,7 @@ export default {
       return this.isAdvanceSearch && this.focusInAdvanceSearch
     },
 
-    ...mapState('AudioPlayer', [
+    ...mapState(useAudioPlayerStore, [
       'oldWorkCardUIStyle',
       'enableShowRecent',
       'workListMode',

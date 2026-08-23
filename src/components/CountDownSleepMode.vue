@@ -1,5 +1,5 @@
 <template>
-  <q-dialog :value="value" persistent position="bottom" @input="$emit('input')">
+  <q-dialog :model-value="modelValue" persistent position="bottom" @update:model-value="$emit('update:model-value', $event)">
     <q-card class="q-pb-xl">
       <q-card-section>
         <div class="row items-center no-wrap">
@@ -66,14 +66,15 @@
 </template>
 
 <script>
-import { mapState, mapMutations } from 'vuex';
+import { mapState, mapActions } from 'pinia';
+import { useAudioPlayerStore } from 'stores/audioPlayer.js'
 import { date } from 'quasar';
 
 export default {
   name: 'CountDownSleepMode',
 
   // v-model: showTimer from MainLayout
-  props: ['value'],
+  props: ['modelValue'],
 
   data() {
     return {
@@ -86,7 +87,7 @@ export default {
   },
 
   computed: {
-    ...mapState('AudioPlayer', ['sleepTime', 'sleepMode']),
+    ...mapState(useAudioPlayerStore, ['sleepTime', 'sleepMode']),
 
     isDarkModeOn() {
       return this.$q.dark.isActive;
@@ -153,7 +154,7 @@ export default {
   },
 
   methods: {
-    ...mapMutations('AudioPlayer', [
+    ...mapActions(useAudioPlayerStore, [
       'SET_SLEEP_TIMER',
       'CLEAR_SLEEP_MODE',
     ]),
@@ -226,7 +227,7 @@ export default {
     },
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     clearInterval(this.countTimerIntervalId);
   },
 };

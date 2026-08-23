@@ -26,7 +26,7 @@
             :release="''"
             :lyric_status="item.lyric_status"
           >
-            <template slot="cover">
+            <template v-slot:cover>
               <div class="playInfo absolute-bottom">
                 <div class="ellipsis-2-lines audioText">
                   {{ getWorkHistoryInfo(item) }}
@@ -45,6 +45,7 @@
 
 <script>
 
+import { useAudioPlayerStore } from 'stores/audioPlayer.js'
 import CoverSFW from './CoverSFW.vue';
 
 export default {
@@ -114,7 +115,7 @@ export default {
     },
 
     resumeThisHistroy(work) {
-      this.$store.commit('AudioPlayer/SET_QUEUE', {
+      useAudioPlayerStore().SET_QUEUE({
         workId: work.id,
         queue: work.state.queue,
         index: work.state.index,

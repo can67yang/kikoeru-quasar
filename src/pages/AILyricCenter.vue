@@ -84,7 +84,7 @@
 </template> 
 
 <script>
-import { mapState } from 'vuex'
+import { mapState } from 'pinia'
 import { copyToClipboard } from 'quasar';
 import { ServerApi, AILyricTaskStatus } from "../utils.js"
 import { prefixWithFormatID } from '../utils.js';
@@ -94,7 +94,7 @@ export default {
   name: 'AILyricCenter',
 
   // v-model: showAILyricCenter from MainLayout
-  props: ['value'],
+  // v-model prop 已随 Vue3 移除，此页面为路由页面无需 prop
 
   mixins: [NotifyMixin],
 

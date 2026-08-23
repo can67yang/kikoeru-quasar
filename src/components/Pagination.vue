@@ -73,7 +73,7 @@ export default {
   name: 'Pagination',
 
   props: {
-    value: {
+    modelValue: {
       type: Number,
       required: true,
     },
@@ -89,7 +89,7 @@ export default {
 
   computed: {
     leadingItems() {
-      const distance = this.value - this.min;
+      const distance = this.modelValue - this.min;
       if (distance <= VISIBLE_ITEMS_SIDE) {
         return [];
       } else if (distance >= VISIBLE_ITEMS_SIDE + 2) {
@@ -102,8 +102,8 @@ export default {
     centerItems() {
       const items = [];
       for (
-        let i = Math.max(this.min, this.value - VISIBLE_ITEMS_SIDE);
-        i <= Math.min(this.max, this.value + VISIBLE_ITEMS_SIDE);
+        let i = Math.max(this.min, this.modelValue - VISIBLE_ITEMS_SIDE);
+        i <= Math.min(this.max, this.modelValue + VISIBLE_ITEMS_SIDE);
         ++i
       ) {
         items.push(i);
@@ -112,7 +112,7 @@ export default {
     },
 
     trailingItems() {
-      const distance = this.max - this.value;
+      const distance = this.max - this.modelValue;
       if (distance <= VISIBLE_ITEMS_SIDE) {
         return [];
       } else if (distance >= VISIBLE_ITEMS_SIDE + 2) {
@@ -131,7 +131,7 @@ export default {
 
   methods: {
     gotoNext() {
-      this.$emit('goto', this.value + 1);
+      this.$emit('goto', this.modelValue + 1);
     },
 
     gotoIndex(index) {
@@ -155,27 +155,27 @@ export default {
   padding: 0 4px;
 }
 
-.super-small ::v-deep .q-field__inner {
+.super-small :deep(.q-field__inner) {
   height: 1.5rem !important;
   width: 4rem;
   padding-top: 0px !important;
 }
 
-.super-small ::v-deep .q-field__control {
+.super-small :deep(.q-field__control) {
   height: 1.5rem !important;
   min-height: 1.5rem !important;
 }
 
-.super-small ::v-deep .q-field__marginal {
+.super-small :deep(.q-field__marginal) {
   height: 1.5rem !important;
 }
 
-.super-small ::v-deep .q-field__label {
+.super-small :deep(.q-field__label) {
   top: 0px !important;
 }
 
-.super-small ::v-deep input,
-.super-small ::v-deep input::placeholder {
+.super-small :deep(input),
+.super-small :deep(input::placeholder) {
   font-size: 0.75rem;
 }
 </style>

@@ -6,7 +6,8 @@
 
 <script>
 import { ServerApi } from '../utils.js'
-import { mapState } from 'vuex'
+import { mapState } from 'pinia'
+import { useAudioPlayerStore } from 'stores/audioPlayer.js'
 
 export default {
   name: 'TranscodingStatus',
@@ -19,7 +20,7 @@ export default {
   },
 
   computed: {
-    ...mapState('AudioPlayer', [
+    ...mapState(useAudioPlayerStore, [
       'transcodeBitRate'
     ]),
 
@@ -113,7 +114,7 @@ export default {
     this.resetChecker();
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     clearInterval(this.intervalId);
     this.intervalId = 0;
   }

@@ -232,8 +232,8 @@
                   <q-item-section>
                     <q-input
                       v-if="hasLyric"
-                      :value="lyricOffsetSeconds"
-                      @input="lyricOffsetChange"
+                      :model-value="lyricOffsetSeconds"
+                      @update:model-value="lyricOffsetChange"
                       type="number"
                       prefix="歌词偏移"
                       suffix="s"
@@ -242,10 +242,10 @@
                       clearable
                       input-style="text-align: right;"
                     >
-                      <template slot="before">
+                      <template v-slot:before>
                           <q-btn size="sm" padding="md xs" icon="sync_alt" @click="lyricSyncDialog = true"></q-btn>
                       </template>
-                      <template slot="append">
+                      <template v-slot:append>
                         <div class="column">
                           <q-btn
                             size="xs"
@@ -341,7 +341,7 @@
           <draggable
             handle=".handle"
             v-model="queueCopy"
-            @change="val => onMoved(val.moved)"
+            @end="val => onMoved({ oldIndex: val.oldIndex, newIndex: val.newIndex })"
           >
             <q-item
               clickable
@@ -414,14 +414,15 @@
 </template>
 
 <script>
-import draggable from 'vuedraggable'
-import AudioElement from 'components/AudioElement'
-import Scrollable from 'components/Scrollable'
-import AudioEqualizer from 'components/AudioEqualizer'
-import LyricSelection from 'components/LyricSelection'
-import TranscodingStatus from 'components/TranscodingStatus'
-import { mapState, mapGetters, mapMutations } from 'vuex'
-import { formatSeconds } from '../utils'
+import { VueDraggable as draggable } from 'vue-draggable-plus'
+import AudioElement from 'components/AudioElement.vue'
+import Scrollable from 'components/Scrollable.vue'
+import AudioEqualizer from 'components/AudioEqualizer.vue'
+import LyricSelection from 'components/LyricSelection.vue'
+import TranscodingStatus from 'components/TranscodingStatus.vue'
+import { mapState, mapActions } from 'pinia'
+import { useAudioPlayerStore } from 'stores/audioPlayer.js'
+import { formatSeconds } from '../utils.js'
 import { debounce } from 'quasar'
 
 export default {
@@ -476,7 +477,7 @@ export default {
     this.detectBuggyIOS()
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     if (this.$q.platform.is.desktop) {
       window.removeEventListener('keydown', this.onKeyDown);
     }
@@ -559,9 +560,9 @@ export default {
     },
 
     proxyGain(val) {
-      if (this.enableVisualizer && this.$store.state.AudioPlayer.audioAnalyser) {
-        this.$store.state.AudioPlayer.audioAnalyser.gain.gain.value = val;
-        console.log("set audio gain: ", this.$store.state.AudioPlayer.audioAnalyser.gain.gain.value)
+      if (this.enableVisualizer && useAudioPlayerStore().audioAnalyser) {
+        useAudioPlayerStore().audioAnalyser.gain.gain.value = val;
+        console.log("set audio gain: ", useAudioPlayerStore().audioAnalyser.gain.gain.value)
       }
     }
   },
@@ -585,7 +586,7 @@ export default {
 
     volume: {
       get () {
-        return this.$store.state.AudioPlayer.volume
+        return useAudioPlayerStore().volume
       },
       set (val) {
         this.SET_VOLUME(val)
@@ -594,7 +595,7 @@ export default {
 
     queue: {
       get () {
-        return this.$store.state.AudioPlayer.queue
+        return useAudioPlayerStore().queue
       },
       set () {}
     },
@@ -666,7 +667,7 @@ export default {
       return `${this.fixDeltaMills > 0 ? '+': ''}${(this.fixDeltaMills/1000).toFixed(2)}s`;
     },
 
-    ...mapState('AudioPlayer', [
+    ...mapState(useAudioPlayerStore, [
       'playing',
       'playingTranscode',
       'hide',
@@ -690,7 +691,7 @@ export default {
       'transcodeOption',
     ]),
     
-    ...mapGetters('AudioPlayer', [
+    ...mapState(useAudioPlayerStore, [
       'currentPlayingFile',
       'resumeHistroyDone',
       'isCurrentPlayingFileVideo',
@@ -718,7 +719,7 @@ export default {
       this.$q.notify({message: `歌词偏移量(${this.fixDeltaMills/1000}s)已应用`, timeout: 500})
     },
 
-    ...mapMutations('AudioPlayer', {
+    ...mapActions(useAudioPlayerStore, {
       toggleHide: 'TOGGLE_HIDE',
       togglePlaying: 'TOGGLE_PLAYING',
       nextTrack: 'NEXT_TRACK',
@@ -734,7 +735,7 @@ export default {
       setEnablePIPLyrics: 'SET_ENABLE_PIP_LYRICS',
       setLyricOffsetSeconds: 'SET_LYRIC_OFFSET_SECONDS',
     }),
-    ...mapMutations('AudioPlayer', [
+    ...mapActions(useAudioPlayerStore, [
       'SET_TRACK',
       'SET_QUEUE',
       'REMOVE_FROM_QUEUE',

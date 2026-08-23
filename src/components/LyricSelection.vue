@@ -13,7 +13,7 @@
         map-options
         class="col lyric-file-select"
         :loading="loadingLyricOptions"
-        @input="selectLyricOption"
+        @update:model-value="selectLyricOption"
       >
         <template v-slot:selected-item="scope">
           <span class="ellipsis">{{ scope.opt.label }}</span>
@@ -79,7 +79,7 @@
           <input
             class="ant-number-input"
             type="text"
-            :value="offsetDisplay"
+            :model-value="offsetDisplay"
             @change="onOffsetInput"
             @keyup.enter="onOffsetInput"
           >
@@ -92,7 +92,8 @@
 </template>
 
 <script>
-import { mapState, mapGetters, mapMutations } from 'vuex';
+import { mapState, mapActions } from 'pinia';
+import { useAudioPlayerStore } from 'stores/audioPlayer.js'
 import { ServerApi } from '../utils.js';
 
 export default {
@@ -120,10 +121,10 @@ export default {
   },
 
   computed: {
-    ...mapState('AudioPlayer', [
+    ...mapState(useAudioPlayerStore, [
       'lyricLines', 'currentLyricLineNumber', 'lyricOffsetSeconds', 'playWorkId',
     ]),
-    ...mapGetters('AudioPlayer', ['currentPlayingFile']),
+    ...mapState(useAudioPlayerStore, ['currentPlayingFile']),
 
     offsetDisplay() {
       return `${this.lyricOffsetSeconds}s`;
@@ -131,13 +132,13 @@ export default {
   },
 
   methods: {
-    ...mapMutations('AudioPlayer', [
+    ...mapActions(useAudioPlayerStore, [
       'SET_NEW_CURRENT_TIME',
       'SET_HAS_LYRIC',
       'SET_LYRIC_LINES',
       'SET_CURRENT_LYRIC',
     ]),
-    ...mapMutations('AudioPlayer', {
+    ...mapActions(useAudioPlayerStore, {
       setLyricOffsetSeconds: 'SET_LYRIC_OFFSET_SECONDS',
     }),
 

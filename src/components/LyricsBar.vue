@@ -28,13 +28,14 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { mapState } from 'pinia'
+import { useAudioPlayerStore } from 'stores/audioPlayer.js'
 
 export default {
   name: 'LyricsBar',
 
   computed: {
-    ...mapState('AudioPlayer', [
+    ...mapState(useAudioPlayerStore, [
       'currentLyric'
     ]),
 
@@ -131,7 +132,7 @@ export default {
     addEventListener('touchcancel', this.onCursorUp)
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     removeEventListener('mousemove', this.onCursorMove)
     removeEventListener('touchmove', this.onCursorMove)
 

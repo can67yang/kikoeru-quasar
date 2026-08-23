@@ -73,9 +73,10 @@
 </template>
 
 <script>
-import { mapState, mapGetters, mapMutations } from 'vuex'
-import { formatSeconds } from '../utils'
-import Scrollable from 'components/Scrollable'
+import { mapState, mapActions } from 'pinia'
+import { useAudioPlayerStore } from 'stores/audioPlayer.js'
+import { formatSeconds } from '../utils.js'
+import Scrollable from 'components/Scrollable.vue'
 import { debounce } from 'quasar';
 const OpState = {
   idle: 0,
@@ -153,7 +154,7 @@ export default {
       return this.state == OpState.horize;
     },
 
-    ...mapState('AudioPlayer', [
+    ...mapState(useAudioPlayerStore, [
       'hide',
       'playing',
       'currentTime',
@@ -164,7 +165,7 @@ export default {
       'forwardSeekTime'
     ]),
 
-    ...mapGetters('AudioPlayer', [
+    ...mapState(useAudioPlayerStore, [
       'currentPlayingFile'
     ]),
 
@@ -234,7 +235,7 @@ export default {
   },
 
   methods: {
-    ...mapMutations('AudioPlayer', {
+    ...mapActions(useAudioPlayerStore, {
       toggleHide: 'TOGGLE_HIDE',
       togglePlaying: 'TOGGLE_PLAYING',
       nextTrack: 'NEXT_TRACK',

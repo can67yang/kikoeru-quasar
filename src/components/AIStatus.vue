@@ -6,7 +6,7 @@
     :thickness="0.2"
     :color="color"
     track-color="grey-8"
-    :value="value"
+    :model-value="value"
   >
     {{ showMsg }}
   </q-circular-progress>
