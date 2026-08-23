@@ -64,7 +64,7 @@
     <q-card class="q-ma-md q-pa-sm">
       <q-table
         title="所有用户"
-        :data="users"
+        :rows="users"
         :columns="columns"
         row-key="name"
         :selected-rows-label="getSelectedString"
