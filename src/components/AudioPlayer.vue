@@ -407,7 +407,7 @@
     </q-dialog>
 
     <!-- 歌词选择（跳转）对话框 -->
-    <q-dialog v-model="showLyricSeekList" seamless>
+    <q-dialog v-model="showLyricSeekList">
       <LyricSelection />
     </q-dialog>
   </div>
@@ -805,7 +805,7 @@ export default {
 
     setPIPLyrics() {
       if (!this.enablePIPLyrics) {
-        this.$q.notify({message: "创建桌面歌词组件中，请稍等...", timeout: 500})
+        this.$q.notify({message: "已开启桌面歌词悬浮窗，可拖动到任意位置", timeout: 1000})
       }
       this.setEnablePIPLyrics(!this.enablePIPLyrics)
     },
