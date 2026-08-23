@@ -1,12 +1,12 @@
 <template>
   <div>
-    <div class="row">
+    <div class="row items-center">
       <q-btn
         class="q-mx-xs jump-unit"
-        outline size="md" padding="none"
+        outline dense
         icon="chevron_left"
-        :disable="value - 1 < min"
-        @click="gotoIndex(value - 1)"
+        :disable="modelValue - 1 < min"
+        @click="gotoIndex(modelValue - 1)"
       >
         <q-tooltip>上一页</q-tooltip>
       </q-btn>
@@ -14,7 +14,7 @@
       <span v-for="item in leadingItems" :key="item">
         <q-btn
           class="q-mx-xs jump-unit"
-          outline size="md" padding="none"
+          outline dense
           :disable="item === null"
           @click="gotoIndex(item)"
         >
@@ -25,9 +25,9 @@
       <span v-for="item in centerItems" :key="item">
         <q-btn
           class="q-mx-xs jump-unit"
-          outline size="md" padding="none"
-          :color="item == value ? 'primary' : ''"
-          :disable="value === item"
+          outline dense
+          :color="item == modelValue ? 'primary' : ''"
+          :disable="modelValue === item"
           @click="gotoIndex(item)"
         >
           {{ item }}
@@ -37,7 +37,7 @@
       <span v-for="item in trailingItems" :key="item">
         <q-btn
           class="q-mx-xs jump-unit"
-          outline size="md" padding="none"
+          outline dense
           :disable="item === null"
           @click="gotoIndex(item)"
         >
@@ -47,10 +47,10 @@
 
       <q-btn
         class="q-mx-xs jump-unit"
-        outline size="md" padding="none"
+        outline dense
         icon="chevron_right"
-        :disable="value + 1 > max"
-        @click="gotoIndex(value + 1)"
+        :disable="modelValue + 1 > max"
+        @click="gotoIndex(modelValue + 1)"
       >
         <q-tooltip>下一页</q-tooltip>
       </q-btn>
@@ -150,24 +150,22 @@ export default {
 
 <style lang="scss" scoped>
 .jump-unit {
-  min-width: 1.5rem;
-  height: 1.5rem;
-  padding: 0 4px;
+  min-width: 2.25rem;
 }
 
 .super-small :deep(.q-field__inner) {
-  height: 1.5rem !important;
-  width: 4rem;
+  height: 2rem !important;
+  width: 4.5rem;
   padding-top: 0px !important;
 }
 
 .super-small :deep(.q-field__control) {
-  height: 1.5rem !important;
-  min-height: 1.5rem !important;
+  height: 2rem !important;
+  min-height: 2rem !important;
 }
 
 .super-small :deep(.q-field__marginal) {
-  height: 1.5rem !important;
+  height: 2rem !important;
 }
 
 .super-small :deep(.q-field__label) {
