@@ -46,7 +46,7 @@
     "workbox-build": "^7.4.1"
   },
   "engines": {
-    "node": ">= 20 < 23"
+    "node": ">= 20"
   },
   "browserslist": [
     "last 1 version",

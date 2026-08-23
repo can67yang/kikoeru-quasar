@@ -7,7 +7,7 @@
 # Please refer to docs/nginx for examples
 
 # Build SPA and PWA
-FROM node:20-alpine as build-stage
+FROM node:24-alpine as build-stage
 WORKDIR /frontend
 RUN npm install -g @quasar/cli
 COPY package*.json ./
