@@ -196,11 +196,8 @@
       <PlayerBar />
       <AudioPlayer />
       <LyricsBar v-if="! enablePIPLyrics"/>
-      <PIPLyrics />
     </div>
-    <q-footer class="q-pa-none">
-      <!--<PIPLyrics v-if="enablePIPLyrics && !isQueueEmpty" />-->
-    </q-footer>
+    <FloatingLyricsWindow />
   </q-layout>
 </template>
 
@@ -208,7 +205,7 @@
 import PlayerBar from 'components/PlayerBar'
 import AudioPlayer from 'components/AudioPlayer'
 import LyricsBar from 'components/LyricsBar'
-import PIPLyrics from 'src/components/PIPLyrics'
+import FloatingLyricsWindow from 'src/components/FloatingLyricsWindow'
 import SleepMode from 'components/SleepMode'
 import CountDownSleepMode from 'components/CountDownSleepMode'
 import NotifyMixin from '../mixins/Notification.js'
@@ -227,7 +224,7 @@ export default {
     LyricsBar,
     SleepMode,
     CountDownSleepMode,
-    PIPLyrics,
+    FloatingLyricsWindow,
 },
 
   data () {

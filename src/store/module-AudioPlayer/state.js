@@ -72,9 +72,8 @@ export default function () {
     audioAnalyser: null, // 全局 audio 音频解析对象
     // audioAnalyzerData: null, // 解析音频信息，可视化展示
 
-    // 是否启用画中画歌词（桌面歌词）
-    // 注意android chrome不支持画中画，firefox估计也不支持，因此在android设备上禁用这一功能
-    enablePIPLyrics: LocalStorage.has(ENABLE_PIP_LYRICS) && LocalStorage.getItem(ENABLE_PIP_LYRICS) && !(navigator.userAgent.toLowerCase().indexOf('android') > -1), 
+    // 是否启用浮动歌词小窗（桌面歌词，B站风格页内自绘小窗，所有平台可用）
+    enablePIPLyrics: LocalStorage.has(ENABLE_PIP_LYRICS) && LocalStorage.getItem(ENABLE_PIP_LYRICS),
 
     // 当从历史记录播放时，这里记录当前queue[queueIndex]应当恢复到的seconds时间，
     // -1表示无需恢复，其他大于等于0的数字需要在onCanplay时间触发并完成时间跳转之后，再次设置为-1
