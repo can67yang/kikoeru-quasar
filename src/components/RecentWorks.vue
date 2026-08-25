@@ -17,7 +17,7 @@
         <div
           class="q-pa-sm"
           style="width: 500px; max-width: 80vw;"
-          @click.stop.prevent="resumeThisHistroy(item)"
+          @click="$router.push(`/work/${item.id}`)"
         >
           <CoverSFW
             class="card q-mx-sm shadow-4"
@@ -45,7 +45,6 @@
 
 <script>
 
-import { useAudioPlayerStore } from 'stores/audioPlayer.js'
 import CoverSFW from './CoverSFW.vue';
 
 export default {
@@ -107,23 +106,21 @@ export default {
       this.$refs.scroll.$el.scrollLeft += (e.deltaX || e.deltaY);
     },
 
-    // 返回单个作品播放历史的简单信息
-    getWorkHistoryInfo(work) {
-      const state = work.state;
-      const lastPlayItem = state.queue[state.index]
-      return lastPlayItem.title;
+    isValidHistory(work) {
+      const state = work && work.state;
+      return !!state
+        && Array.isArray(state.queue)
+        && state.queue.length > 0
+        && Number.isInteger(state.index)
+        && state.index >= 0
+        && state.index < state.queue.length;
     },
 
-    resumeThisHistroy(work) {
-      useAudioPlayerStore().SET_QUEUE({
-        workId: work.id,
-        queue: work.state.queue,
-        index: work.state.index,
-        resetPlaying: false,
-        resumeHistroySeconds: work.state.seconds,
-      })
-      console.log(`resume seconds = ${work.state.seconds}`)
-    }
+    // 返回单个作品播放历史的简单信息
+    getWorkHistoryInfo(work) {
+      if (!this.isValidHistory(work)) return '无播放记录';
+      return work.state.queue[work.state.index].title;
+    },
 
   },
 

@@ -251,7 +251,7 @@ export default {
         params.filter = this.progressFilter;
       }
 
-      const requestUrl = this.mode == 'histroy' ? "/api/histroy" : 'api/review'
+      const requestUrl = this.mode == 'histroy' ? "/api/histroy" : "/api/review"
       return this.$axios.get(requestUrl, { params })
         .then((response) => {                  
           const works = response.data.works

@@ -62,10 +62,10 @@
       <q-dialog v-model="deleteConfirm" persistent transition-show="scale" transition-hide="scale">
         <q-card class="bg-teal text-white" style="width: 300px">
           <q-card-section>
-            <div class="text-h6">确定要删除标记吗</div>
+            <div class="text-h6">确定要删除标记吗？</div>
           </q-card-section>
 
-          <q-card-actions align="right" class="text-teal">
+          <q-card-actions align="right" class="bg-white text-teal">
               <q-btn flat label="确定" v-close-popup @click="deleteReview()" />
               <q-btn flat label="取消" v-close-popup @click="closeDialog()"/>
           </q-card-actions>
