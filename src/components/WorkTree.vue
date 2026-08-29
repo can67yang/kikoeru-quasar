@@ -17,20 +17,18 @@
     <q-dialog v-model="preview_img" full-width>
       <q-card v-if="preview_img_list.length">
         <q-card-section>
-          <div class="row items-center no-wrap">
+          <div class="row items-center q-gutter-xs">
             <div class="col">
               <div class="text-h6">{{preview_img_name}}</div>
               <div class="text-subtitle2">{{ preview_img_idx+1 }}/{{ preview_img_list.length }}</div>
             </div>
-            <q-btn outline @click="editImg(preview_img_list[preview_img_idx])">编辑作为封面</q-btn>
-            <div v-if="playWorkId > 0" class="col-auto">
-              <q-btn outline @click="setVisualPlayerCover(preview_img_list[preview_img_idx])">用作可视化封面</q-btn>
-            </div>
+            <q-btn outline class="col-auto" @click="editImg(preview_img_list[preview_img_idx])">编辑作为封面</q-btn>
+            <q-btn v-if="playWorkId > 0" outline class="col-auto" @click="setVisualPlayerCover(preview_img_list[preview_img_idx])">用作可视化封面</q-btn>
           </div>
         </q-card-section>
 
         <q-card-section class="q-pt-none">
-          <q-img style="height: calc(100vh - 200pt);" :src="preview_img_url" contain />
+          <q-img style="height: calc(100vh - 200px);" :src="preview_img_url" fit="contain" />
         </q-card-section>
 
         <q-card-actions align="around">

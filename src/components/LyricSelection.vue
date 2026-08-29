@@ -35,7 +35,12 @@
 
     <!-- 主体：歌词行列表（原生滚动区，右侧预留 15px 滚动条槽位，参照 asmr.one） -->
     <div class="col relative-position lyric-scroll-wrap">
-      <div class="scroll lyric-content">
+      <div
+        ref="lyricContent"
+        class="scroll lyric-content"
+        @wheel.passive="markUserScroll"
+        @touchstart.passive="markUserScroll"
+      >
         <q-list>
         <q-item
           v-for="(line, index) in lyricLines"
@@ -104,15 +109,19 @@ export default {
       selectedLyric: null,
       lyricOptions: [],
       loadingLyricOptions: false,
+      // 用户手动滚动后的截止时间戳，在此之前不自动定位（避免字幕乱跳）
+      userScrollUntil: 0,
     };
   },
 
   watch: {
     currentLyricLineNumber() {
-      this.scrollToCurrentLine();
+      // 等 DOM 更新（#currentLyricEl 移到新行）后再定位，否则会定位到旧行
+      this.$nextTick(() => this.scrollToCurrentLine());
     },
     lyricLines() {
-      this.scrollToCurrentLine();
+      // 切换歌词文件后强制重新定位，即使用户刚滚动过
+      this.$nextTick(() => this.scrollToCurrentLine(true));
     },
     'currentPlayingFile.hash'() {
       // 切换音轨时重新加载歌词文件列表
@@ -163,15 +172,19 @@ export default {
       event.target.value = this.offsetDisplay;
     },
 
-    scrollToCurrentLine() {
-      const currentLine = document.querySelector('#currentLyricEl');
-      if (currentLine) {
-        currentLine.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-          inline: 'center',
-        });
-      }
+    markUserScroll() {
+      this.userScrollUntil = Date.now() + 3000;
+    },
+
+    // 只滚动歌词容器本身（scrollIntoView 会波及所有可滚动的祖先容器，导致页面晃动）
+    scrollToCurrentLine(force = false) {
+      const container = this.$refs.lyricContent;
+      if (!container) return;
+      if (!force && Date.now() < this.userScrollUntil) return;
+      const currentLine = container.querySelector('#currentLyricEl');
+      if (!currentLine) return;
+      const top = currentLine.offsetTop - (container.clientHeight - currentLine.offsetHeight) / 2;
+      container.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
     },
 
     async loadLyricOptions() {
@@ -257,6 +270,8 @@ export default {
 
   mounted() {
     this.loadLyricOptions();
+    // 打开界面时立即定位到当前播放行（此前要等行号变化才跳转）
+    this.$nextTick(() => this.scrollToCurrentLine(true));
   },
 };
 </script>
