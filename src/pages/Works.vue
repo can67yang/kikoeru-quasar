@@ -11,7 +11,7 @@
     -->
     <div v-if="isAdvanceSearch" class="q-pa-md q-full-width row items-stretch" style="position: relative">
       <q-select
-        class="col-2"
+        class="col-4 col-sm-2"
         option-value="value"
         option-label="label"
         emit-value
@@ -22,7 +22,7 @@
         v-model="searchMetaType"
       />
       <q-input
-        class="col-10"
+        class="col-8 col-sm-10"
         outlined
         dense
         autofocus

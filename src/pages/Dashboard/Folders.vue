@@ -51,7 +51,7 @@
     </q-card>
 
     <q-dialog v-model="showForm">
-      <q-card style="min-width: 480px;">
+      <q-card style="min-width: min(480px, 92vw);">
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6">{{ editingIndex >= 0 ? `编辑来源: ${form.name}` : '新增来源' }}</div>
           <q-space />

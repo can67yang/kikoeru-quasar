@@ -154,7 +154,12 @@ export default {
 
     /* 垂直位置置于底部playBar尚未考上一点，这个后面可以手动调整 */
     top: -80px;
-    
+
+    // 小屏下 play bar 占用更高（见 MainLayout 的 padding-bottom-play-bar），同步上移避让
+    @media (max-width: $breakpoint-xs-max) {
+      top: -104px;
+    }
+
     display: flex;
     flex-direction: column;
     align-self: center;
@@ -184,7 +189,7 @@ export default {
     background-color: rgba($grey-5, $alpha: 0.7);
   }
   .fontSizeBar {
-    width: 300px;
+    width: min(300px, 80vw);
     position: absolute;
     left: 50%;
     bottom: 0;

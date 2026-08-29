@@ -1,7 +1,7 @@
 <template>
   <div class="row">
       <CoverSFW
-        class="col q-ma-sm row justify-start shadow-4"
+        class="col-12 col-sm-6 col-md-4 q-ma-sm row justify-start shadow-4"
         :workid="metadata.id"
         :nsfw="false"
         :release="metadata.release"
@@ -210,7 +210,7 @@
 
       <!-- 删除作品对话框 -->
       <q-dialog v-model="showDeleteDialog">
-        <q-card style="min-width: 400px; max-width: 500px;">
+        <q-card style="min-width: min(400px, 92vw); max-width: 500px;">
           <q-card-section class="row items-center q-pb-none">
             <div class="text-h6 text-negative">删除作品</div>
             <q-space />

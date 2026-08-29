@@ -37,7 +37,7 @@
           </q-card-section>
 
           <q-card-section class="q-pt-none" >
-            <div style="min-width: 300px">
+            <div style="min-width: min(300px, 92vw)">
               <q-input
                 v-model="reviewText"
                 filled

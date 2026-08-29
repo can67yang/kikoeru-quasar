@@ -12,9 +12,9 @@
           </router-link>
         </q-toolbar-title>
 
-        <q-input v-if="$route.name !== 'advance search'" dark dense rounded standout v-model="keyword" debounce="500" input-class="text-right" class="q-mr-sm">
+        <q-input v-if="$route.name !== 'advance search'" dark dense rounded standout v-model="keyword" debounce="500" input-class="text-right" class="q-mr-sm col">
           <template v-slot:before>
-            <q-btn round dense flat icon="manage_search" to="/search">
+            <q-btn round dense flat icon="manage_search" to="/search" class="gt-xs">
               <q-tooltip>点此进入聚合搜索，支持多关键字搜索</q-tooltip>
             </q-btn>
           </template>
@@ -535,7 +535,12 @@ export default {
 
 // 为了避开底部的play bar设置的padding
 .padding-bottom-play-bar {
-  padding-bottom: 80px !important 
+  padding-bottom: 80px !important;
+
+  // 小屏下 play bar（60px 高 + bottom 20px）正好占满 80px，加大留白避免遮挡
+  @media (max-width: $breakpoint-xs-max) {
+    padding-bottom: 104px !important
+  }
 }
 
 .scroller {
