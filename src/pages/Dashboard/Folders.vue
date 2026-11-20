@@ -30,6 +30,7 @@
               <template v-if="rootFolder.type === 'webdav'">
                 <br>服务器: {{rootFolder.url}}
                 <br v-if="rootFolder.username">用户名: {{rootFolder.username}}
+                <template v-if="rootFolder.certFingerprint"> · 已固定证书</template>
                 <template v-if="rootFolder.insecure"> · 跳过 TLS 校验</template>
               </template>
             </q-item-label>
@@ -89,7 +90,16 @@
             />
             <q-input class="q-mb-md" outlined dense v-model="form.username" label="用户名" autocomplete="username" />
             <q-input class="q-mb-md" outlined dense v-model="form.password" label="密码" type="password" autocomplete="new-password" />
-            <q-toggle class="q-mt-xs" v-model="form.insecure" label="跳过 TLS 证书校验(家庭自建 HTTPS 证书)" />
+            <q-input
+              class="q-mb-sm"
+              outlined dense
+              v-model="form.certFingerprint"
+              label="服务器证书 SHA-256 指纹(可选)"
+              hint="固定叶证书指纹，可接受自签证书；仍校验主机名。证书更新后需更新指纹。"
+              placeholder="64 位十六进制，可带冒号"
+              :rules="[val => !val || /^(?:[a-f0-9]{64}|(?:[a-f0-9]{2}:){31}[a-f0-9]{2})$/i.test(val.trim()) || '请输入 SHA-256 指纹(64 位十六进制，可带冒号)']"
+            />
+            <q-toggle class="q-mt-xs" v-model="form.insecure" label="跳过 TLS 证书校验(不安全；不能与证书指纹同时使用)" />
           </template>
         </q-card-section>
 
@@ -164,7 +174,8 @@ function emptyForm () {
     url: '',
     username: '',
     password: '',
-    insecure: false
+    insecure: false,
+    certFingerprint: ''
   }
 }
 
@@ -266,6 +277,8 @@ export default {
       if (form.type === 'webdav') {
         if (!form.url) return '请输入 WebDAV 服务器地址。'
         if (!/^https?:\/\//i.test(form.url)) return '服务器地址需以 http:// 或 https:// 开头。'
+        if (form.insecure && form.certFingerprint) return '跳过 TLS 校验不能与证书指纹同时使用。'
+        if (form.certFingerprint && !/^(?:[a-f0-9]{64}|(?:[a-f0-9]{2}:){31}[a-f0-9]{2})$/i.test(form.certFingerprint.trim())) return '证书指纹必须为 SHA-256(64 位十六进制，可带冒号)。'
       }
       return ''
     },
@@ -281,6 +294,7 @@ export default {
         form.username = (this.form.username || '').trim()
         form.password = this.form.password || ''
         form.insecure = !!this.form.insecure
+        form.certFingerprint = (this.form.certFingerprint || '').trim()
       } else {
         form.path = (this.form.path || '').trim()
       }
@@ -335,6 +349,7 @@ export default {
         username: folder.username,
         password: folder.password,
         insecure: folder.insecure,
+        certFingerprint: folder.certFingerprint,
         path: folder.path
       })
         .then((response) => {
